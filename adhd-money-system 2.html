@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your ADHD Money System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --card: #1a1916;
+    --card2: #201f1c;
+    --border: #2e2c28;
+    --accent: #e8c547;
+    --accent2: #e87d47;
+    --accent3: #6bcf8f;
+    --muted: #6b6860;
+    --text: #f0ede6;
+    --text2: #b8b4aa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+    background-image: 
+      radial-gradient(ellipse at 10% 10%, rgba(232,197,71,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(232,125,71,0.05) 0%, transparent 50%);
+  }
+
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    margin-bottom: 3rem;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .header-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .header-sub {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: var(--text2);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .icon-yellow { background: rgba(232,197,71,0.15); }
+  .icon-orange { background: rgba(232,125,71,0.15); }
+  .icon-green { background: rgba(107,207,143,0.15); }
+  .icon-blue { background: rgba(100,160,255,0.15); }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+
+  .section-tag {
+    margin-left: auto;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--card2);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  /* BUDGET GRID */
+  .budget-intro {
+    font-size: 0.8rem;
+    color: var(--text2);
+    margin-bottom: 1.25rem;
+    line-height: 1.7;
+  }
+
+  .budget-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 500px) {
+    .budget-grid { grid-template-columns: 1fr; }
+  }
+
+  .budget-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .budget-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .budget-card.needs::before { background: var(--accent); }
+  .budget-card.fun::before { background: var(--accent2); }
+  .budget-card.save::before { background: var(--accent3); }
+  .budget-card.buffer::before { background: #6ba4ff; }
+
+  .budget-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .budget-amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 0.2rem;
+  }
+
+  .needs .budget-amount { color: var(--accent); }
+  .fun .budget-amount { color: var(--accent2); }
+  .save .budget-amount { color: var(--accent3); }
+  .buffer .budget-amount { color: #6ba4ff; }
+
+  .budget-desc {
+    font-size: 0.72rem;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  .budget-note {
+    background: rgba(232,197,71,0.07);
+    border: 1px solid rgba(232,197,71,0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  .budget-note strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* FRICTION STEPS */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .step:hover {
+    border-color: var(--muted);
+    background: var(--card2);
+  }
+
+  .step.done {
+    border-color: rgba(107,207,143,0.3);
+    background: rgba(107,207,143,0.04);
+  }
+
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.2s;
+  }
+
+  .step.done .step-num {
+    background: var(--accent3);
+    border-color: var(--accent3);
+    color: #0f0e0c;
+    font-size: 0.8rem;
+  }
+
+  .step-content {}
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+
+  .step.done .step-title {
+    color: var(--accent3);
+  }
+
+  .step-detail {
+    font-size: 0.72rem;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* DOPAMINE MENU */
+  .dopamine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.6rem;
+  }
+
+  .dopamine-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .dopamine-card:hover {
+    border-color: var(--accent2);
+    background: var(--card2);
+    transform: translateY(-1px);
+  }
+
+  .dopamine-card.picked {
+    border-color: var(--accent2);
+    background: rgba(232,125,71,0.08);
+  }
+
+  .dopamine-emoji {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .dopamine-text {}
+
+  .dopamine-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.15rem;
+  }
+
+  .dopamine-sub {
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* WISHLIST */
+  .wishlist-intro {
+    font-size: 0.78rem;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  .wishlist-add {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .wishlist-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 0.9rem;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .wishlist-input:focus {
+    border-color: var(--accent);
+  }
+
+  .wishlist-input::placeholder {
+    color: var(--muted);
+  }
+
+  .btn {
+    background: var(--accent);
+    color: #0f0e0c;
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  .wishlist-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .wishlist-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    animation: fadeUp 0.3s ease;
+  }
+
+  .wishlist-item-name {
+    flex: 1;
+    font-size: 0.8rem;
+    color: var(--text);
+  }
+
+  .wishlist-timer {
+    font-size: 0.7rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .wishlist-timer.ready {
+    color: var(--accent3);
+  }
+
+  .wishlist-del {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 0.2rem;
+    transition: color 0.2s;
+  }
+  .wishlist-del:hover { color: var(--accent2); }
+
+  .wishlist-empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 1.5rem;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    font-style: italic;
+  }
+
+  /* SAVINGS GOAL */
+  .goal-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .goal-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .goal-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  .goal-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent3);
+  }
+
+  .goal-bar-bg {
+    height: 8px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+  }
+
+  .goal-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent3), #a8e6bf);
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .goal-amounts {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .goal-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .goal-input {
+    flex: 1;
+    min-width: 100px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .goal-input:focus { border-color: var(--accent3); }
+
+  .btn-green {
+    background: var(--accent3);
+    color: #0f0e0c;
+    border: none;
+    border-radius: 8px;
+    padding: 0.55rem 0.9rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-green:hover { opacity: 0.85; }
+
+  /* URGE PAUSE */
+  .urge-box {
+    background: linear-gradient(135deg, rgba(232,125,71,0.08), rgba(232,197,71,0.05));
+    border: 1px solid rgba(232,125,71,0.25);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+
+  .urge-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--accent2);
+    margin-bottom: 0.5rem;
+  }
+
+  .urge-text {
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  .urge-timer-display {
+    font-family: 'Syne', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent2);
+    text-align: center;
+    margin: 0.5rem 0;
+    letter-spacing: 0.05em;
+    display: none;
+  }
+
+  .urge-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-orange {
+    background: var(--accent2);
+    color: #0f0e0c;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-orange:hover { opacity: 0.85; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+
+  .urge-result {
+    display: none;
+    font-size: 0.8rem;
+    color: var(--accent3);
+    text-align: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    padding: 0.5rem;
+    animation: fadeUp 0.3s ease;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.5rem 0 1.5rem;
+  }
+
+  /* ANIM */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SCROLL */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .tip {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 0.75rem;
+    line-height: 1.6;
+  }
+
+  /* BUDGET INPUTS */
+  .budget-inputs {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .input-label {
+    font-size: 0.72rem;
+    color: var(--text2);
+    min-width: 200px;
+    flex-shrink: 0;
+  }
+
+  .input-wrap {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    align-items: center;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+  }
+
+  .input-prefix {
+    padding: 0 0.6rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    user-select: none;
+  }
+
+  .budget-field {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0.55rem 0.5rem 0.55rem 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text);
+    width: 100%;
+  }
+
+  .budget-field::placeholder { color: var(--muted); }
+
+  /* hide number input spinners */
+  .budget-field::-webkit-outer-spin-button,
+  .budget-field::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .budget-field[type=number] { -moz-appearance: textfield; }
+
+  /* dark date picker */
+  .budget-field[type=date] {
+    color-scheme: dark;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .input-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.25rem 0;
+  }
+
+  /* PAYDAY STRIP */
+  .payday-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(107,207,143,0.07);
+    border: 1px solid rgba(107,207,143,0.2);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .payday-item {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .payday-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 0.2rem;
+  }
+
+  .payday-date {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+
+  .payday-action {
+    font-size: 0.7rem;
+    color: var(--text2);
+  }
+
+  .payday-action span {
+    color: var(--accent3);
+    font-weight: 700;
+  }
+
+  .payday-divider {
+    font-size: 1.2rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-label">your personal system</div>
+    <h1>ADHD <span>Money</span> OS</h1>
+    <p class="header-sub">Built for a dopamine brain. Works with your wiring, not against it.<br>No willpower required — just systems.</p>
+  </div>
+
+  <!-- SECTION 1: BUDGET -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-yellow">💸</div>
+      <div class="section-title">Your Monthly Budget Split</div>
+      <div class="section-tag" id="budgetTag">editable</div>
+    </div>
+
+    <p class="budget-intro">Enter your real numbers below. The split auto-calculates and your breathing room updates live. Guilt-free fun money is non-negotiable — it stops the restrict-then-blow cycle.</p>
+
+    <!-- INPUT PANEL -->
+    <div class="budget-inputs">
+      <div class="input-row">
+        <label class="input-label">Monthly take-home</label>
+        <div class="input-wrap">
+          <span class="input-prefix">$</span>
+          <input class="budget-field" id="income" type="number" placeholder="3000" min="0" oninput="calcBudget()">
+        </div>
+      </div>
+      <div class="input-row">
+        <label class="input-label">Fixed needs (rent, bills…)</label>
+        <div class="input-wrap">
+          <span class="input-prefix">$</span>
+          <input class="budget-field" id="needs" type="number" placeholder="1350" min="0" oninput="calcBudget()">
+        </div>
+      </div>
+      <div class="input-row">
+        <label class="input-label">Auto-savings per month</label>
+        <div class="input-wrap">
+          <span class="input-prefix">$</span>
+          <input class="budget-field" id="savings" type="number" placeholder="300" min="0" oninput="calcBudget()">
+        </div>
+      </div>
+      <div class="input-row">
+        <label class="input-label">Fun money (guilt-free!)</label>
+        <div class="input-wrap">
+          <span class="input-prefix">$</span>
+          <input class="budget-field" id="fun" type="number" placeholder="200" min="0" oninput="calcBudget()">
+        </div>
+      </div>
+      <div class="input-divider"></div>
+      <div class="input-row">
+        <label class="input-label">Next payday</label>
+        <div class="input-wrap">
+          <input class="budget-field" id="payday1" type="date" oninput="calcBudget()" style="padding-left:0.75rem;">
+        </div>
+      </div>
+      <div class="input-row">
+        <label class="input-label">2nd payday (bi-weekly)</label>
+        <div class="input-wrap">
+          <input class="budget-field" id="payday2" type="date" oninput="calcBudget()" style="padding-left:0.75rem;">
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE CARDS -->
+    <div class="budget-grid" style="margin-top:1.25rem;">
+      <div class="budget-card needs">
+        <div class="budget-label">Fixed Needs</div>
+        <div class="budget-amount" id="card-needs">$—</div>
+        <div class="budget-desc">Rent, utilities, phone, subscriptions. Set up autopay. Forget it.</div>
+      </div>
+      <div class="budget-card fun">
+        <div class="budget-label">Fun Money 🔥</div>
+        <div class="budget-amount" id="card-fun">$—</div>
+        <div class="budget-desc">Clothes, food delivery, going out. Fully guilt-free. When it's gone, it's gone.</div>
+      </div>
+      <div class="budget-card save">
+        <div class="budget-label">Savings (Auto)</div>
+        <div class="budget-amount" id="card-save">$—</div>
+        <div class="budget-desc">Transfer on payday before you see it. Out of sight, out of mind.</div>
+      </div>
+      <div class="budget-card buffer">
+        <div class="budget-label">Breathing Room</div>
+        <div class="budget-amount" id="card-buffer">$—</div>
+        <div class="budget-desc" id="card-buffer-desc">What's left after everything. Aim for &gt;$0!</div>
+      </div>
+    </div>
+
+    <!-- PAY DATE STRIP -->
+    <div class="payday-strip" id="paydayStrip" style="display:none;">
+      <div class="payday-item">
+        <div class="payday-label">Payday 1</div>
+        <div class="payday-date" id="strip-pay1">—</div>
+        <div class="payday-action">Transfer <span id="strip-sav1">$—</span> to savings</div>
+      </div>
+      <div class="payday-divider">→</div>
+      <div class="payday-item">
+        <div class="payday-label">Payday 2</div>
+        <div class="payday-date" id="strip-pay2">—</div>
+        <div class="payday-action">Transfer <span id="strip-sav2">$—</span> to savings</div>
+      </div>
+    </div>
+
+    <div class="budget-note" style="margin-top:1rem;">
+      <strong>The golden rule:</strong> Move your savings to a <em>different bank</em> on each payday — automatically. SoFi, Ally, or Marcus. The 1-3 day transfer delay is the friction that saves you.
+    </div>
+  </div>
+
+  <!-- SECTION 2: FRICTION SETUP -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-orange">🧱</div>
+      <div class="section-title">Friction Setup Checklist</div>
+      <div class="section-tag">do once</div>
+    </div>
+
+    <div class="steps" id="steps">
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Delete shopping apps from your phone</div>
+          <div class="step-detail">Amazon, ASOS, Depop, whatever you use. Force yourself to use a browser — it adds 2 minutes of friction that kills most impulse buys.</div>
+        </div>
+      </div>
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Remove saved cards from every website</div>
+          <div class="step-detail">Amazon, Uber Eats, everywhere. Typing in a card number gives your brain time to pause. It's annoying — that's the point.</div>
+        </div>
+      </div>
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Unsubscribe from all store emails</div>
+          <div class="step-detail">Use unroll.me or go through your inbox manually. Sales emails are dopamine traps designed by professionals. Opt out.</div>
+        </div>
+      </div>
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Open a separate savings account at a different bank</div>
+          <div class="step-detail">SoFi, Marcus, Ally — all free, good rates. Set up an auto-transfer on payday. Never log in casually.</div>
+        </div>
+      </div>
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Set up a "fun money" debit card</div>
+          <div class="step-detail">Load it with $400 at the start of the month. When it's empty, fun spending stops. No shame, no tracking needed — the card does the work.</div>
+        </div>
+      </div>
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">Install a website blocker for weak moments</div>
+          <div class="step-detail">Cold Turkey or Freedom — schedule blocks for evenings/weekends when impulse spending peaks. Block Amazon, ASOS, UberEats during those windows.</div>
+        </div>
+      </div>
+    </div>
+    <p class="tip">Click each step to check it off as you complete it.</p>
+  </div>
+
+  <!-- SECTION 3: WISHLIST -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-yellow">⏳</div>
+      <div class="section-title">48-Hour Wishlist</div>
+      <div class="section-tag">impulse buster</div>
+    </div>
+
+    <p class="wishlist-intro">When you feel the urge to buy something, add it here instead. The dopamine hit from <em>wanting</em> is real — let it scratch the itch. After 48 hours, you decide: still want it? Buy it guilt-free from your fun money. Usually... you won't.</p>
+
+    <div class="wishlist-add">
+      <input class="wishlist-input" id="wishlistInput" placeholder="I want to buy..." type="text" onkeydown="if(event.key==='Enter') addWishItem()">
+      <button class="btn" onclick="addWishItem()">+ Add</button>
+    </div>
+
+    <div class="wishlist-items" id="wishlistItems">
+      <div class="wishlist-empty" id="wishlistEmpty">Nothing here yet — next time you feel an urge, add it instead of buying.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: SAVINGS GOAL -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-green">🎯</div>
+      <div class="section-title">Savings Goal Tracker</div>
+      <div class="section-tag">visual dopamine</div>
+    </div>
+
+    <div class="goal-section">
+      <div class="goal-row">
+        <div>
+          <div class="goal-name" id="goalName">My Goal</div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-top:0.15rem;">tap the name to rename it</div>
+        </div>
+        <div class="goal-pct" id="goalPct">0%</div>
+      </div>
+      <div class="goal-bar-bg">
+        <div class="goal-bar-fill" id="goalBar" style="width:0%"></div>
+      </div>
+      <div class="goal-amounts">
+        <span id="goalSaved">$0 saved</span>
+        <span id="goalTarget">Goal: $1,000</span>
+      </div>
+      <div class="goal-controls">
+        <input class="goal-input" id="goalAddInput" type="number" placeholder="Add amount ($)" min="0">
+        <button class="btn-green" onclick="addToGoal()">+ Add</button>
+        <input class="goal-input" id="goalTargetInput" type="number" placeholder="Change goal ($)" min="1">
+        <button class="btn-green" style="background:var(--accent);color:#0f0e0c;" onclick="setGoalTarget()">Set</button>
+      </div>
+    </div>
+    <p class="tip">Rename your goal to something exciting: "Japan trip", "New laptop fund", "Freedom account". Specificity makes your brain care.</p>
+  </div>
+
+  <!-- SECTION 5: DOPAMINE MENU -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-orange">⚡</div>
+      <div class="section-title">Your Dopamine Menu</div>
+      <div class="section-tag">urge replacement</div>
+    </div>
+
+    <p class="budget-intro" style="margin-bottom:1rem;">When the urge to spend hits, pick something from this menu instead. These are based on what <em>you</em> said you enjoy. Tap one to highlight it.</p>
+
+    <div class="dopamine-grid">
+      <div class="dopamine-card" onclick="this.classList.toggle('picked')">
+        <div class="dopamine-emoji">🚶</div>
+        <div class="dopamine-text">
+          <div class="dopamine-name">Go for a walk</div>
+          <div class="dopamine-sub">Change of scene resets the urge. No destination needed.</div>
+        </div>
+      </div>
+      <div class="dopamine-card" onclick="this.classList.toggle('picked')">
+        <div class="dopamine-emoji">🎬</div>
+        <div class="dopamine-text">
+          <div class="dopamine-name">Queue a show</div>
+          <div class="dopamine-sub">Pick something new you've been meaning to watch.</div>
+        </div>
+      </div>
+      <div class="dopamine-card" onclick="this.classList.toggle('picked')">
+        <div class="dopamine-emoji">🎮</div>
+        <div class="dopamine-text">
+          <div class="dopamine-name">Gaming session</div>
+          <div class="dopamine-sub">Satisfying and free. Built-in reward loops.</div>
+        </div>
+      </div>
+      <div class="dopamine-card" onclick="this.classList.toggle('picked')">
+        <div class="dopamine-emoji">🎵</div>
+        <div class="dopamine-text">
+          <div class="dopamine-name">Make a playlist</div>
+          <div class="dopamine-sub">Build one for a mood, a trip, a season. Creative and absorbing.</div>
+        </div>
+      </div>
+      <div class="dopamine-card" onclick="this.classList.toggle('picked')">
+        <div class="dopamine-emoji">🍳</div>
+        <div class="dopamine-text">
+          <div class="dopamine-name">Cook something new</div>
+          <div class="dopamine-sub">Use what's in the fridge. Productive dopamine hit.</div>
+        </div>
+      </div>
+      <div class="dopamine-card" onclick="this.classList.toggle('picked')">
+        <div class="dopamine-emoji">🎨</div>
+        <div class="dopamine-text">
+          <div class="dopamine-name">Make something</div>
+          <div class="dopamine-sub">Draw, write, doodle, build. Creating > consuming.</div>
+        </div>
+      </div>
+      <div class="dopamine-card" onclick="this.classList.toggle('picked')">
+        <div class="dopamine-emoji">🛁</div>
+        <div class="dopamine-text">
+          <div class="dopamine-name">Treat yourself at home</div>
+          <div class="dopamine-sub">Long shower, face mask, cozy setup. Free luxury.</div>
+        </div>
+      </div>
+      <div class="dopamine-card" onclick="this.classList.toggle('picked')">
+        <div class="dopamine-emoji">🌿</div>
+        <div class="dopamine-text">
+          <div class="dopamine-name">Go outside, no phone</div>
+          <div class="dopamine-sub">Breaks the scroll-and-shop loop. 10 mins is enough.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: URGE PAUSE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon icon-orange">🛑</div>
+      <div class="section-title">Urge Pause Timer</div>
+      <div class="section-tag">in the moment</div>
+    </div>
+
+    <div class="urge-box">
+      <div class="urge-title">Feeling the urge to spend right now?</div>
+      <div class="urge-text">Hit the button. A 5-minute timer starts. Do anything else — the urge will fade. If it doesn't, add it to the 48-hr wishlist instead.</div>
+      <div class="urge-timer-display" id="urgeTimer">5:00</div>
+      <div class="urge-result" id="urgeResult">✓ You made it. That urge is already weaker. Add it to the wishlist if it's still there.</div>
+      <div class="urge-buttons">
+        <button class="btn-orange" onclick="startUrgeTimer()" id="urgeStartBtn">Start 5-min pause</button>
+        <button class="btn-ghost" onclick="resetUrgeTimer()" id="urgeResetBtn" style="display:none">Reset</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---- BUDGET CALCULATOR ----
+function fmt(n) {
+  if (isNaN(n)) return '$—';
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+}
+
+function calcBudget() {
+  const income  = parseFloat(document.getElementById('income').value)  || 0;
+  const needs   = parseFloat(document.getElementById('needs').value)   || 0;
+  const savings = parseFloat(document.getElementById('savings').value) || 0;
+  const fun     = parseFloat(document.getElementById('fun').value)     || 0;
+  const pay1    = document.getElementById('payday1').value;
+  const pay2    = document.getElementById('payday2').value;
+
+  const buffer = income - needs - savings - fun;
+
+  document.getElementById('card-needs').textContent  = fmt(needs);
+  document.getElementById('card-fun').textContent    = fmt(fun);
+  document.getElementById('card-save').textContent   = fmt(savings);
+  document.getElementById('card-buffer').textContent = fmt(buffer);
+
+  const bufDesc = document.getElementById('card-buffer-desc');
+  if (income > 0) {
+    if (buffer < 0) {
+      bufDesc.textContent = '⚠️ Over budget! Reduce a category above.';
+      document.getElementById('card-buffer').style.color = '#ff6b6b';
+    } else if (buffer < 100) {
+      bufDesc.textContent = 'Very tight — try to free up some room.';
+      document.getElementById('card-buffer').style.color = '#e8c547';
+    } else {
+      bufDesc.textContent = 'Nice buffer. Life happens — this is your cushion.';
+      document.getElementById('card-buffer').style.color = '#6ba4ff';
+    }
+  }
+
+  // tag
+  if (income > 0) {
+    document.getElementById('budgetTag').textContent = fmt(income) + '/mo';
+  }
+
+  // payday strip
+  const strip = document.getElementById('paydayStrip');
+  const savPerCheck = savings > 0 ? savings / 2 : 0;
+  if (pay1 || pay2) {
+    strip.style.display = 'flex';
+    document.getElementById('strip-pay1').textContent = fmtDate(pay1) || '—';
+    document.getElementById('strip-pay2').textContent = fmtDate(pay2) || '—';
+    document.getElementById('strip-sav1').textContent = fmt(savPerCheck);
+    document.getElementById('strip-sav2').textContent = fmt(savPerCheck);
+  } else {
+    strip.style.display = 'none';
+  }
+
+  saveBudget();
+}
+
+function saveBudget() {
+  try {
+    localStorage.setItem('adhd_budget_os', JSON.stringify({
+      income:  document.getElementById('income').value,
+      needs:   document.getElementById('needs').value,
+      savings: document.getElementById('savings').value,
+      fun:     document.getElementById('fun').value,
+      payday1: document.getElementById('payday1').value,
+      payday2: document.getElementById('payday2').value,
+    }));
+  } catch(e) {}
+}
+
+function loadBudget() {
+  try {
+    const d = JSON.parse(localStorage.getItem('adhd_budget_os') || 'null');
+    if (!d) return;
+    document.getElementById('income').value  = d.income  || '';
+    document.getElementById('needs').value   = d.needs   || '';
+    document.getElementById('savings').value = d.savings || '';
+    document.getElementById('fun').value     = d.fun     || '';
+    document.getElementById('payday1').value = d.payday1 || '';
+    document.getElementById('payday2').value = d.payday2 || '';
+    calcBudget();
+  } catch(e) {}
+}
+
+
+// ---- STEPS ----
+function toggleStep(el) {
+  el.classList.toggle('done');
+  const num = el.querySelector('.step-num');
+  if (el.classList.contains('done')) num.textContent = '✓';
+  else num.textContent = el.querySelector('.step-num').dataset.n || num.textContent;
+  saveSteps();
+}
+
+function saveSteps() {
+  const steps = document.querySelectorAll('.step');
+  const state = Array.from(steps).map(s => s.classList.contains('done'));
+  try { localStorage.setItem('adhd_steps', JSON.stringify(state)); } catch(e) {}
+}
+
+function loadSteps() {
+  try {
+    const state = JSON.parse(localStorage.getItem('adhd_steps') || '[]');
+    const steps = document.querySelectorAll('.step');
+    steps.forEach((s, i) => {
+      if (state[i]) {
+        s.classList.add('done');
+        s.querySelector('.step-num').textContent = '✓';
+      } else {
+        s.querySelector('.step-num').textContent = i + 1;
+        s.querySelector('.step-num').dataset.n = i + 1;
+      }
+    });
+  } catch(e) {}
+}
+
+// ---- WISHLIST ----
+let wishItems = [];
+
+function loadWish() {
+  try { wishItems = JSON.parse(localStorage.getItem('adhd_wish') || '[]'); } catch(e) { wishItems = []; }
+  renderWish();
+}
+
+function saveWish() {
+  try { localStorage.setItem('adhd_wish', JSON.stringify(wishItems)); } catch(e) {}
+}
+
+function addWishItem() {
+  const input = document.getElementById('wishlistInput');
+  const val = input.value.trim();
+  if (!val) return;
+  wishItems.push({ name: val, added: Date.now() });
+  input.value = '';
+  saveWish();
+  renderWish();
+}
+
+function removeWishItem(idx) {
+  wishItems.splice(idx, 1);
+  saveWish();
+  renderWish();
+}
+
+function renderWish() {
+  const container = document.getElementById('wishlistItems');
+  const empty = document.getElementById('wishlistEmpty');
+  if (wishItems.length === 0) {
+    empty.style.display = 'block';
+    container.innerHTML = '';
+    container.appendChild(empty);
+    return;
+  }
+  empty.style.display = 'none';
+  container.innerHTML = '';
+  wishItems.forEach((item, i) => {
+    const elapsed = Date.now() - item.added;
+    const hours = Math.floor(elapsed / 3600000);
+    const ready = hours >= 48;
+    const timerText = ready ? '✓ 48hrs passed — still want it?' : `${hours}h / 48h`;
+    const el = document.createElement('div');
+    el.className = 'wishlist-item';
+    el.innerHTML = `
+      <div class="wishlist-item-name">${escHtml(item.name)}</div>
+      <div class="wishlist-timer ${ready ? 'ready' : ''}">${timerText}</div>
+      <button class="wishlist-del" onclick="removeWishItem(${i})" title="Remove">×</button>
+    `;
+    container.appendChild(el);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---- GOAL ----
+let goalSaved = 0;
+let goalTarget = 1000;
+
+function loadGoal() {
+  try {
+    goalSaved = parseFloat(localStorage.getItem('adhd_saved') || '0');
+    goalTarget = parseFloat(localStorage.getItem('adhd_target') || '1000');
+    const name = localStorage.getItem('adhd_goalname') || 'My Goal';
+    document.getElementById('goalName').textContent = name;
+  } catch(e) {}
+  renderGoal();
+}
+
+function saveGoal() {
+  try {
+    localStorage.setItem('adhd_saved', goalSaved);
+    localStorage.setItem('adhd_target', goalTarget);
+    localStorage.setItem('adhd_goalname', document.getElementById('goalName').textContent);
+  } catch(e) {}
+}
+
+function addToGoal() {
+  const val = parseFloat(document.getElementById('goalAddInput').value);
+  if (!val || val <= 0) return;
+  goalSaved += val;
+  if (goalSaved > goalTarget) goalSaved = goalTarget;
+  document.getElementById('goalAddInput').value = '';
+  saveGoal();
+  renderGoal();
+}
+
+function setGoalTarget() {
+  const val = parseFloat(document.getElementById('goalTargetInput').value);
+  if (!val || val <= 0) return;
+  goalTarget = val;
+  document.getElementById('goalTargetInput').value = '';
+  saveGoal();
+  renderGoal();
+}
+
+function renderGoal() {
+  const pct = goalTarget > 0 ? Math.round((goalSaved / goalTarget) * 100) : 0;
+  document.getElementById('goalPct').textContent = pct + '%';
+  document.getElementById('goalBar').style.width = pct + '%';
+  document.getElementById('goalSaved').textContent = '$' + goalSaved.toLocaleString() + ' saved';
+  document.getElementById('goalTarget').textContent = 'Goal: $' + goalTarget.toLocaleString();
+}
+
+// Goal name edit
+document.getElementById('goalName').addEventListener('click', function() {
+  const current = this.textContent;
+  const input = document.createElement('input');
+  input.value = current;
+  input.style.cssText = 'background:var(--card2);border:1px solid var(--accent);border-radius:6px;padding:0.2rem 0.5rem;color:var(--text);font-family:Syne,sans-serif;font-weight:700;font-size:0.95rem;outline:none;width:180px;';
+  this.replaceWith(input);
+  input.focus();
+  input.select();
+  const done = () => {
+    const span = document.createElement('div');
+    span.id = 'goalName';
+    span.className = 'goal-name';
+    span.textContent = input.value.trim() || current;
+    span.style.cursor = 'pointer';
+    input.replaceWith(span);
+    span.addEventListener('click', arguments.callee || function(){});
+    saveGoal();
+    // re-attach listener
+    document.getElementById('goalName').addEventListener('click', function() {
+      location.reload(); // simple fallback
+    });
+  };
+  input.addEventListener('blur', done);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') done(); });
+});
+
+// ---- URGE TIMER ----
+let urgeInterval = null;
+let urgeSeconds = 300;
+
+function startUrgeTimer() {
+  if (urgeInterval) return;
+  urgeSeconds = 300;
+  document.getElementById('urgeTimer').style.display = 'block';
+  document.getElementById('urgeResult').style.display = 'none';
+  document.getElementById('urgeStartBtn').disabled = true;
+  document.getElementById('urgeStartBtn').style.opacity = '0.5';
+  document.getElementById('urgeResetBtn').style.display = 'inline-block';
+
+  urgeInterval = setInterval(() => {
+    urgeSeconds--;
+    const m = Math.floor(urgeSeconds / 60);
+    const s = urgeSeconds % 60;
+    document.getElementById('urgeTimer').textContent = m + ':' + String(s).padStart(2,'0');
+    if (urgeSeconds <= 0) {
+      clearInterval(urgeInterval);
+      urgeInterval = null;
+      document.getElementById('urgeTimer').style.display = 'none';
+      document.getElementById('urgeResult').style.display = 'block';
+      document.getElementById('urgeStartBtn').disabled = false;
+      document.getElementById('urgeStartBtn').style.opacity = '1';
+    }
+  }, 1000);
+}
+
+function resetUrgeTimer() {
+  clearInterval(urgeInterval);
+  urgeInterval = null;
+  document.getElementById('urgeTimer').style.display = 'none';
+  document.getElementById('urgeResult').style.display = 'none';
+  document.getElementById('urgeStartBtn').disabled = false;
+  document.getElementById('urgeStartBtn').style.opacity = '1';
+  document.getElementById('urgeResetBtn').style.display = 'none';
+}
+
+// ---- INIT ----
+loadBudget();
+loadSteps();
+loadWish();
+loadGoal();
+
+// Number steps
+document.querySelectorAll('.step').forEach((s, i) => {
+  const num = s.querySelector('.step-num');
+  if (!s.classList.contains('done')) {
+    num.textContent = i + 1;
+    num.dataset.n = i + 1;
+  }
+});
+</script>
+</body>
+</html>
