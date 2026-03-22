@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADHD Budget Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f4ef;
+  --surface: #ffffff;
+  --surface2: #f0ece4;
+  --border: #e0d9ce;
+  --text: #1a1713;
+  --text2: #6b6458;
+  --text3: #a09890;
+  --ink: #1a1713;
+  --green: #2d6a4f;
+  --green-light: #d8f3dc;
+  --green-mid: #74c69d;
+  --red: #c1121f;
+  --red-light: #ffe5e7;
+  --yellow: #e09f3e;
+  --yellow-light: #fff3cd;
+  --blue: #264653;
+  --blue-light: #e0f0f5;
+  --accent: #c77dff;
+  --accent-light: #f3e6ff;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: ‘DM Mono’, monospace;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+padding-bottom: 4rem;
+background-image: url(“data:image/svg+xml,%3Csvg width=‘60’ height=‘60’ viewBox=‘0 0 60 60’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cg fill=‘none’ fill-rule=‘evenodd’%3E%3Cg fill=’%23c4b9a8’ fill-opacity=‘0.15’%3E%3Cpath d=‘M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z’/%3E%3C/g%3E%3C/g%3E%3C/svg%3E”);
+}
+
+/* ── TOP BAR ── */
+.topbar {
+background: var(–ink);
+color: #f7f4ef;
+padding: 1.25rem 2rem;
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-wrap: wrap;
+gap: 1rem;
+position: sticky;
+top: 0;
+z-index: 100;
+box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.topbar-title {
+font-family: ‘Fraunces’, serif;
+font-size: 1.4rem;
+font-weight: 900;
+letter-spacing: -0.02em;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.topbar-title span { color: var(–yellow); }
+
+.topbar-tabs {
+display: flex;
+gap: 0.25rem;
+background: rgba(255,255,255,0.08);
+border-radius: 8px;
+padding: 0.25rem;
+}
+
+.tab-btn {
+background: none;
+border: none;
+color: rgba(247,244,239,0.6);
+font-family: ‘DM Mono’, monospace;
+font-size: 0.72rem;
+padding: 0.4rem 0.8rem;
+border-radius: 6px;
+cursor: pointer;
+transition: all 0.2s;
+white-space: nowrap;
+}
+
+.tab-btn.active {
+background: var(–yellow);
+color: var(–ink);
+font-weight: 500;
+}
+
+/* ── MAIN ── */
+.main { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem; }
+
+/* TABS */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── SETUP PANEL ── */
+.setup-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 1.5rem;
+}
+@media(max-width:600px){ .setup-grid{ grid-template-columns:1fr; } }
+
+.card {
+background: var(–surface);
+border: 1.5px solid var(–border);
+border-radius: 16px;
+padding: 1.5rem;
+box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.card-full { grid-column: 1 / -1; }
+
+.card-title {
+font-family: ‘Fraunces’, serif;
+font-weight: 700;
+font-size: 1rem;
+margin-bottom: 1.25rem;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+color: var(–ink);
+}
+
+.card-title .icon {
+width: 28px; height: 28px;
+border-radius: 7px;
+display: flex; align-items: center; justify-content: center;
+font-size: 0.9rem;
+}
+
+.icon-g { background: var(–green-light); }
+.icon-y { background: var(–yellow-light); }
+.icon-b { background: var(–blue-light); }
+.icon-p { background: var(–accent-light); }
+.icon-r { background: var(–red-light); }
+
+/* INCOME */
+.income-row {
+display: flex;
+align-items: center;
+gap: 0.75rem;
+margin-bottom: 0.75rem;
+flex-wrap: wrap;
+}
+
+.income-label {
+font-size: 0.72rem;
+color: var(–text2);
+white-space: nowrap;
+min-width: 130px;
+}
+
+.field {
+flex: 1;
+min-width: 120px;
+background: var(–surface2);
+border: 1.5px solid var(–border);
+border-radius: 8px;
+padding: 0.55rem 0.75rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.82rem;
+color: var(–text);
+outline: none;
+transition: border-color 0.2s;
+}
+.field:focus { border-color: var(–yellow); }
+
+.paydate-row {
+display: flex;
+align-items: center;
+gap: 0.75rem;
+margin-top: 0.25rem;
+}
+
+/* BILLS */
+.bills-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+
+.bill-row {
+display: grid;
+grid-template-columns: 1fr 90px 80px 32px;
+gap: 0.4rem;
+align-items: center;
+animation: fadeIn 0.25s ease;
+}
+
+.bill-row input, .bill-row select {
+background: var(–surface2);
+border: 1.5px solid var(–border);
+border-radius: 7px;
+padding: 0.45rem 0.6rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.75rem;
+color: var(–text);
+outline: none;
+width: 100%;
+transition: border-color 0.2s;
+}
+.bill-row input:focus, .bill-row select:focus { border-color: var(–yellow); }
+
+.del-btn {
+background: none;
+border: 1.5px solid var(–border);
+border-radius: 7px;
+color: var(–text3);
+cursor: pointer;
+font-size: 0.9rem;
+width: 32px; height: 32px;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.2s;
+}
+.del-btn:hover { border-color: var(–red); color: var(–red); background: var(–red-light); }
+
+.add-btn {
+background: none;
+border: 1.5px dashed var(–border);
+border-radius: 8px;
+padding: 0.5rem 0.75rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.72rem;
+color: var(–text2);
+cursor: pointer;
+width: 100%;
+text-align: left;
+transition: all 0.2s;
+}
+.add-btn:hover { border-color: var(–yellow); color: var(–ink); background: var(–yellow-light); }
+
+/* SPENDING CATS */
+.cats-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+.cat-row {
+display: grid;
+grid-template-columns: 1fr 100px 32px;
+gap: 0.4rem;
+align-items: center;
+animation: fadeIn 0.25s ease;
+}
+.cat-row input {
+background: var(–surface2);
+border: 1.5px solid var(–border);
+border-radius: 7px;
+padding: 0.45rem 0.6rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.75rem;
+color: var(–text);
+outline: none;
+width: 100%;
+transition: border-color 0.2s;
+}
+.cat-row input:focus { border-color: var(–yellow); }
+
+/* SAVINGS */
+.savings-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+.sav-row {
+display: grid;
+grid-template-columns: 1fr 100px 100px 32px;
+gap: 0.4rem;
+align-items: center;
+animation: fadeIn 0.25s ease;
+}
+.sav-row input {
+background: var(–surface2);
+border: 1.5px solid var(–border);
+border-radius: 7px;
+padding: 0.45rem 0.6rem;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.75rem;
+color: var(–text);
+outline: none;
+width: 100%;
+transition: border-color 0.2s;
+}
+.sav-row input:focus { border-color: var(–green); }
+
+.primary-btn {
+background: var(–ink);
+color: #f7f4ef;
+border: none;
+border-radius: 10px;
+padding: 0.7rem 1.5rem;
+font-family: ‘Fraunces’, serif;
+font-weight: 700;
+font-size: 0.95rem;
+cursor: pointer;
+transition: opacity 0.2s, transform 0.1s;
+letter-spacing: 0.01em;
+}
+.primary-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.primary-btn:active { transform: translateY(0); }
+
+/* ── MONTH VIEW ── */
+.month-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 1.5rem;
+flex-wrap: wrap;
+gap: 0.75rem;
+}
+
+.month-nav {
+display: flex;
+align-items: center;
+gap: 0.75rem;
+}
+
+.nav-btn {
+background: var(–surface);
+border: 1.5px solid var(–border);
+border-radius: 8px;
+width: 34px; height: 34px;
+cursor: pointer;
+font-size: 1rem;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.2s;
+color: var(–text);
+}
+.nav-btn:hover { border-color: var(–yellow); background: var(–yellow-light); }
+
+.month-title {
+font-family: ‘Fraunces’, serif;
+font-weight: 900;
+font-size: 1.5rem;
+color: var(–ink);
+letter-spacing: -0.02em;
+}
+
+/* SUMMARY STRIP */
+.summary-strip {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 0.75rem;
+margin-bottom: 1.5rem;
+}
+@media(max-width:600px){ .summary-strip{ grid-template-columns:1fr 1fr; } }
+
+.sum-card {
+background: var(–surface);
+border: 1.5px solid var(–border);
+border-radius: 12px;
+padding: 1rem;
+}
+.sum-label { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(–text3); margin-bottom: 0.3rem; }
+.sum-value { font-family: ‘Fraunces’, serif; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em; }
+.sum-value.green { color: var(–green); }
+.sum-value.red { color: var(–red); }
+.sum-value.yellow { color: var(–yellow); }
+.sum-value.blue { color: var(–blue); }
+
+/* PAYCHECK WEEKS */
+.payweeks { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.5rem; }
+
+.payweek-card {
+background: var(–surface);
+border: 1.5px solid var(–border);
+border-radius: 16px;
+overflow: hidden;
+box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.payweek-header {
+background: var(–ink);
+color: #f7f4ef;
+padding: 0.9rem 1.25rem;
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-wrap: wrap;
+gap: 0.5rem;
+}
+
+.payweek-label {
+font-family: ‘Fraunces’, serif;
+font-weight: 700;
+font-size: 0.95rem;
+}
+
+.payweek-date { font-size: 0.7rem; color: rgba(247,244,239,0.6); }
+
+.payweek-amount {
+font-family: ‘Fraunces’, serif;
+font-weight: 900;
+font-size: 1.1rem;
+color: var(–yellow);
+}
+
+.payweek-body { padding: 1.25rem; }
+
+.pw-section-title {
+font-size: 0.62rem;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: var(–text3);
+margin-bottom: 0.6rem;
+margin-top: 1rem;
+padding-top: 1rem;
+border-top: 1px solid var(–border);
+}
+.pw-section-title:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+.pw-items { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.pw-item {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 0.5rem 0.6rem;
+border-radius: 8px;
+font-size: 0.78rem;
+gap: 0.5rem;
+}
+
+.pw-item.bill { background: var(–red-light); }
+.pw-item.cat { background: var(–yellow-light); }
+.pw-item.sav { background: var(–green-light); }
+
+.pw-item-name { color: var(–text); flex: 1; }
+.pw-item-due { font-size: 0.65rem; color: var(–text3); }
+.pw-item-amt { font-family: ‘Fraunces’, serif; font-weight: 700; white-space: nowrap; }
+.pw-item.bill .pw-item-amt { color: var(–red); }
+.pw-item.cat .pw-item-amt { color: var(–yellow); }
+.pw-item.sav .pw-item-amt { color: var(–green); }
+
+.pw-leftover {
+display: flex;
+align-items: center;
+justify-content: space-between;
+background: var(–blue-light);
+border-radius: 10px;
+padding: 0.65rem 0.75rem;
+margin-top: 1rem;
+font-family: ‘Fraunces’, serif;
+}
+.pw-leftover-label { font-size: 0.8rem; color: var(–blue); font-weight: 700; }
+.pw-leftover-val { font-size: 1.1rem; font-weight: 900; }
+.pw-leftover-val.ok { color: var(–green); }
+.pw-leftover-val.warn { color: var(–yellow); }
+.pw-leftover-val.danger { color: var(–red); }
+
+/* ── BILLS CALENDAR ── */
+.bills-calendar {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 0.4rem;
+margin-bottom: 1.5rem;
+}
+
+.cal-day-header {
+font-size: 0.6rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: var(–text3);
+text-align: center;
+padding: 0.3rem 0;
+}
+
+.cal-day {
+background: var(–surface);
+border: 1.5px solid var(–border);
+border-radius: 10px;
+padding: 0.4rem;
+min-height: 56px;
+position: relative;
+font-size: 0.65rem;
+}
+
+.cal-day.empty { background: transparent; border-color: transparent; }
+.cal-day.today { border-color: var(–yellow); background: var(–yellow-light); }
+.cal-day.has-bill { border-color: var(–red); }
+
+.cal-day-num {
+font-family: ‘Fraunces’, serif;
+font-weight: 700;
+font-size: 0.82rem;
+color: var(–text2);
+margin-bottom: 0.2rem;
+}
+
+.cal-bill-tag {
+background: var(–red);
+color: white;
+border-radius: 4px;
+padding: 0.1rem 0.3rem;
+font-size: 0.55rem;
+margin-bottom: 0.15rem;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+display: block;
+}
+
+.cal-pay-tag {
+background: var(–green);
+color: white;
+border-radius: 4px;
+padding: 0.1rem 0.3rem;
+font-size: 0.55rem;
+margin-bottom: 0.15rem;
+display: block;
+}
+
+@media(max-width:500px){
+.bills-calendar { grid-template-columns: repeat(7,1fr); gap: 0.2rem; }
+.cal-day { min-height: 44px; padding: 0.25rem; }
+}
+
+/* SAVINGS GOAL BARS */
+.sav-goals { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem; }
+.sav-goal-item { background: var(–surface); border: 1.5px solid var(–border); border-radius: 12px; padding: 1rem 1.25rem; }
+.sav-goal-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+.sav-goal-name { font-family: ‘Fraunces’, serif; font-weight: 700; font-size: 0.9rem; }
+.sav-goal-pct { font-family: ‘Fraunces’, serif; font-weight: 900; font-size: 1.1rem; color: var(–green); }
+.sav-bar-bg { height: 8px; background: var(–surface2); border-radius: 99px; overflow: hidden; margin-bottom: 0.4rem; }
+.sav-bar-fill { height: 100%; background: linear-gradient(90deg, var(–green), var(–green-mid)); border-radius: 99px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+.sav-bar-nums { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(–text3); }
+.sav-add-row { display: flex; gap: 0.4rem; margin-top: 0.75rem; }
+.sav-add-input { flex:1; background:var(–surface2); border:1.5px solid var(–border); border-radius:7px; padding:0.4rem 0.6rem; font-family:‘DM Mono’,monospace; font-size:0.75rem; color:var(–text); outline:none; }
+.sav-add-input:focus { border-color:var(–green); }
+.sav-add-btn { background:var(–green); color:white; border:none; border-radius:7px; padding:0.4rem 0.75rem; font-family:‘Fraunces’,serif; font-weight:700; font-size:0.78rem; cursor:pointer; transition:opacity 0.2s; }
+.sav-add-btn:hover { opacity:0.85; }
+
+/* COL HEADERS for bill/cat rows */
+.row-headers {
+display: grid;
+font-size: 0.6rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: var(–text3);
+margin-bottom: 0.3rem;
+padding: 0 0.1rem;
+}
+.bill-headers { grid-template-columns: 1fr 90px 80px 32px; gap: 0.4rem; }
+.cat-headers { grid-template-columns: 1fr 100px 32px; gap: 0.4rem; }
+.sav-headers { grid-template-columns: 1fr 100px 100px 32px; gap: 0.4rem; }
+
+/* ADHD TIP BOX */
+.tip-box {
+background: var(–accent-light);
+border: 1.5px solid #d4a0ff;
+border-radius: 12px;
+padding: 0.9rem 1.1rem;
+font-size: 0.75rem;
+color: #5a2d82;
+line-height: 1.7;
+margin-bottom: 1.25rem;
+display: flex;
+gap: 0.6rem;
+align-items: flex-start;
+}
+
+.empty-state {
+text-align: center;
+color: var(–text3);
+font-size: 0.8rem;
+padding: 2rem;
+border: 1.5px dashed var(–border);
+border-radius: 12px;
+font-style: italic;
+}
+</style>
+
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">💰 ADHD <span>Budget</span> Planner</div>
+  <div class="topbar-tabs">
+    <button class="tab-btn active" onclick="switchTab('setup')">⚙️ Setup</button>
+    <button class="tab-btn" onclick="switchTab('month')">📅 Month View</button>
+    <button class="tab-btn" onclick="switchTab('payweek')">💸 Pay Weeks</button>
+    <button class="tab-btn" onclick="switchTab('savings')">🏦 Savings</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════ SETUP ══════════════════════════════════ -->
+
+<div class="tab-panel active" id="tab-setup">
+
+  <div class="tip-box">
+    💜 <span>Fill in your details below, then check the other tabs to see your budget auto-calculated by pay week and month. Everything saves to your browser.</span>
+  </div>
+
+  <div class="setup-grid">
+
+```
+<!-- INCOME -->
+<div class="card">
+  <div class="card-title"><div class="icon icon-g">💵</div> Income</div>
+  <div class="income-row">
+    <div class="income-label">Paycheck amount</div>
+    <input class="field" id="paycheckAmt" type="number" placeholder="e.g. 1500" min="0" oninput="save()">
+  </div>
+  <div class="income-row">
+    <div class="income-label">Next payday</div>
+    <input class="field" id="nextPayday" type="date" oninput="save()">
+  </div>
+  <div style="font-size:0.68rem;color:var(--text3);margin-top:0.25rem;">Paid bi-weekly — your second paycheck auto-calculates 14 days later.</div>
+</div>
+
+<!-- SAVINGS RATE -->
+<div class="card">
+  <div class="card-title"><div class="icon icon-g">🏦</div> Auto-Savings</div>
+  <div class="income-row">
+    <div class="income-label">Save per paycheck</div>
+    <input class="field" id="savingsAmt" type="number" placeholder="e.g. 200" min="0" oninput="save()">
+  </div>
+  <div class="income-row">
+    <div class="income-label">Transfer to bank</div>
+    <input class="field" id="savingsBank" type="text" placeholder="e.g. SoFi, Ally" oninput="save()">
+  </div>
+  <div style="font-size:0.68rem;color:var(--text3);margin-top:0.25rem;">💡 Auto-transfer on payday so you never see it. Out of sight = saved.</div>
+</div>
+
+<!-- BILLS -->
+<div class="card card-full">
+  <div class="card-title"><div class="icon icon-r">📋</div> Bills & Fixed Expenses</div>
+  <div class="row-headers bill-headers">
+    <span>Bill name</span><span>Amount</span><span>Due day</span><span></span>
+  </div>
+  <div class="bills-list" id="billsList"></div>
+  <button class="add-btn" onclick="addBill()">+ Add a bill</button>
+</div>
+
+<!-- SPENDING CATS -->
+<div class="card">
+  <div class="card-title"><div class="icon icon-y">🛍️</div> Spending Categories</div>
+  <div class="row-headers cat-headers">
+    <span>Category</span><span>Monthly budget</span><span></span>
+  </div>
+  <div class="cats-list" id="catsList"></div>
+  <button class="add-btn" onclick="addCat()">+ Add category</button>
+</div>
+
+<!-- SAVINGS GOALS -->
+<div class="card">
+  <div class="card-title"><div class="icon icon-g">🎯</div> Savings Goals</div>
+  <div class="row-headers sav-headers">
+    <span>Goal name</span><span>Saved so far</span><span>Target</span><span></span>
+  </div>
+  <div class="savings-list" id="savingsList"></div>
+  <button class="add-btn" onclick="addSavGoal()">+ Add a goal</button>
+</div>
+```
+
+  </div>
+
+  <div style="margin-top:1.5rem; display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+    <button class="primary-btn" onclick="switchTab('month')">View Month →</button>
+    <button class="primary-btn" onclick="switchTab('payweek')" style="background:var(--green);">View Pay Weeks →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ MONTH ══════════════════════════════════ -->
+
+<div class="tab-panel" id="tab-month">
+
+  <div class="month-header">
+    <div class="month-nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">←</button>
+      <div class="month-title" id="monthTitle">—</div>
+      <button class="nav-btn" onclick="changeMonth(1)">→</button>
+    </div>
+    <div style="font-size:0.72rem;color:var(--text2);">Bi-weekly pay highlighted in green</div>
+  </div>
+
+  <!-- Summary strip -->
+
+  <div class="summary-strip" id="summaryStrip">
+    <div class="sum-card"><div class="sum-label">Monthly Income</div><div class="sum-value green" id="sumIncome">—</div></div>
+    <div class="sum-card"><div class="sum-label">Bills Total</div><div class="sum-value red" id="sumBills">—</div></div>
+    <div class="sum-card"><div class="sum-label">Spending Budget</div><div class="sum-value yellow" id="sumSpend">—</div></div>
+    <div class="sum-card"><div class="sum-label">Breathing Room</div><div class="sum-value blue" id="sumRoom">—</div></div>
+  </div>
+
+  <!-- Calendar -->
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-title" style="margin-bottom:1rem;"><div class="icon icon-b">📅</div> Bill & Payday Calendar</div>
+    <div class="bills-calendar" id="billsCalendar"></div>
+  </div>
+
+  <!-- All bills this month -->
+
+  <div class="card">
+    <div class="card-title"><div class="icon icon-r">📋</div> All Bills This Month</div>
+    <div id="monthBillsList" class="pw-items" style="margin-top:0.5rem;"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ PAYWEEK ══════════════════════════════════ -->
+
+<div class="tab-panel" id="tab-payweek">
+
+  <div class="tip-box">
+    💜 <span>Each paycheck is split below. Bills are assigned to whichever paycheck comes <strong>before</strong> their due date. Spending categories split evenly between both checks.</span>
+  </div>
+
+  <div class="month-header">
+    <div class="month-nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">←</button>
+      <div class="month-title" id="pwMonthTitle">—</div>
+      <button class="nav-btn" onclick="changeMonth(1)">→</button>
+    </div>
+  </div>
+
+  <div class="payweeks" id="payweeksContainer"></div>
+
+</div>
+
+<!-- ══════════════════════════════════ SAVINGS ══════════════════════════════════ -->
+
+<div class="tab-panel" id="tab-savings">
+
+  <div class="tip-box">
+    💜 <span>Name your goals something exciting — not "emergency fund" but "Japan trip" or "laptop fund". Your brain cares more about vivid goals. Track progress by adding money as you save.</span>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem;">
+    <div class="card-title"><div class="icon icon-g">🏦</div> Auto-Savings Plan</div>
+    <div id="savingsSummary" style="font-size:0.82rem;color:var(--text2);line-height:1.8;"></div>
+  </div>
+
+  <div class="sav-goals" id="savGoalsDisplay"></div>
+
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ─── STATE ───
+let state = {
+  paycheckAmt: '',
+  nextPayday: '',
+  savingsAmt: '',
+  savingsBank: '',
+  bills: [],
+  cats: [],
+  savGoals: [],
+  currentYear: new Date().getFullYear(),
+  currentMonth: new Date().getMonth()
+};
+
+// ─── PERSISTENCE ───
+function save() {
+  state.paycheckAmt = document.getElementById('paycheckAmt').value;
+  state.nextPayday = document.getElementById('nextPayday').value;
+  state.savingsAmt = document.getElementById('savingsAmt').value;
+  state.savingsBank = document.getElementById('savingsBank').value;
+  try { localStorage.setItem('adhd_budget2', JSON.stringify(state)); } catch(e) {}
+  refreshViews();
+}
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('adhd_budget2') || 'null');
+    if (d) {
+      state = { ...state, ...d };
+      state.currentYear = new Date().getFullYear();
+      state.currentMonth = new Date().getMonth();
+    }
+  } catch(e) {}
+  document.getElementById('paycheckAmt').value = state.paycheckAmt || '';
+  document.getElementById('nextPayday').value = state.nextPayday || '';
+  document.getElementById('savingsAmt').value = state.savingsAmt || '';
+  document.getElementById('savingsBank').value = state.savingsBank || '';
+  renderBills(); renderCats(); renderSavGoals();
+  refreshViews();
+}
+
+// ─── BILLS ───
+function addBill(b) {
+  if (!b) b = { name: '', amount: '', due: '' };
+  state.bills.push(b);
+  renderBills();
+}
+
+function renderBills() {
+  const el = document.getElementById('billsList');
+  el.innerHTML = '';
+  state.bills.forEach((b, i) => {
+    const row = document.createElement('div');
+    row.className = 'bill-row';
+    row.innerHTML = `
+      <input placeholder="e.g. Rent" value="${esc(b.name)}" oninput="state.bills[${i}].name=this.value;save()">
+      <input type="number" placeholder="$0" value="${esc(b.amount)}" min="0" oninput="state.bills[${i}].amount=this.value;save()">
+      <input type="number" placeholder="Day 1-31" value="${esc(b.due)}" min="1" max="31" oninput="state.bills[${i}].due=this.value;save()">
+      <button class="del-btn" onclick="removeBill(${i})">×</button>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function removeBill(i) { state.bills.splice(i,1); renderBills(); save(); }
+
+// ─── CATS ───
+function addCat(c) {
+  if (!c) c = { name: '', amount: '' };
+  state.cats.push(c);
+  renderCats();
+}
+
+function renderCats() {
+  const el = document.getElementById('catsList');
+  el.innerHTML = '';
+  state.cats.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'cat-row';
+    row.innerHTML = `
+      <input placeholder="e.g. Groceries" value="${esc(c.name)}" oninput="state.cats[${i}].name=this.value;save()">
+      <input type="number" placeholder="$0/mo" value="${esc(c.amount)}" min="0" oninput="state.cats[${i}].amount=this.value;save()">
+      <button class="del-btn" onclick="removeCat(${i})">×</button>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function removeCat(i) { state.cats.splice(i,1); renderCats(); save(); }
+
+// ─── SAV GOALS ───
+function addSavGoal(g) {
+  if (!g) g = { name: '', saved: 0, target: '' };
+  state.savGoals.push(g);
+  renderSavGoals();
+}
+
+function renderSavGoals() {
+  const el = document.getElementById('savingsList');
+  el.innerHTML = '';
+  state.savGoals.forEach((g, i) => {
+    const row = document.createElement('div');
+    row.className = 'sav-row';
+    row.innerHTML = `
+      <input placeholder="e.g. Japan trip" value="${esc(g.name)}" oninput="state.savGoals[${i}].name=this.value;save()">
+      <input type="number" placeholder="$0 saved" value="${g.saved||0}" min="0" oninput="state.savGoals[${i}].saved=parseFloat(this.value)||0;save()">
+      <input type="number" placeholder="$0 goal" value="${esc(g.target)}" min="0" oninput="state.savGoals[${i}].target=this.value;save()">
+      <button class="del-btn" onclick="removeSavGoal(${i})">×</button>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function removeSavGoal(i) { state.savGoals.splice(i,1); renderSavGoals(); save(); }
+
+// ─── TABS ───
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(name === 'payweek' ? 'pay' : name)) b.classList.add('active');
+  });
+  refreshViews();
+}
+
+// ─── MONTH NAV ───
+function changeMonth(d) {
+  state.currentMonth += d;
+  if (state.currentMonth > 11) { state.currentMonth = 0; state.currentYear++; }
+  if (state.currentMonth < 0) { state.currentMonth = 11; state.currentYear--; }
+  refreshViews();
+}
+
+// ─── HELPERS ───
+function esc(s) { return (s||'').toString().replace(/"/g,'&quot;'); }
+function fmt(n) { return '$' + parseFloat(n||0).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+function parseDollars(v) { return parseFloat(v) || 0; }
+
+function getPaydays(year, month) {
+  if (!state.nextPayday) return [];
+  const anchor = new Date(state.nextPayday + 'T00:00:00');
+  const days = [];
+  // walk back and forward from anchor to find all payday in month
+  const firstOfMonth = new Date(year, month, 1);
+  const lastOfMonth = new Date(year, month + 1, 0);
+  // find first paycheck on or before first of month
+  let cur = new Date(anchor);
+  while (cur > firstOfMonth) cur = new Date(cur.getTime() - 14*86400000);
+  while (cur < firstOfMonth) cur = new Date(cur.getTime() + 14*86400000);
+  // now collect all in month
+  while (cur <= lastOfMonth) {
+    if (cur.getMonth() === month && cur.getFullYear() === year) days.push(new Date(cur));
+    cur = new Date(cur.getTime() + 14*86400000);
+  }
+  return days;
+}
+
+// ─── REFRESH ALL VIEWS ───
+function refreshViews() {
+  renderMonthView();
+  renderPayweekView();
+  renderSavingsView();
+}
+
+// ─── MONTH VIEW ───
+function renderMonthView() {
+  const year = state.currentYear, month = state.currentMonth;
+  const names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('monthTitle').textContent = names[month] + ' ' + year;
+  document.getElementById('pwMonthTitle').textContent = names[month] + ' ' + year;
+
+  const paydays = getPaydays(year, month);
+  const paycheck = parseDollars(state.paycheckAmt);
+  const monthlyIncome = paycheck * paydays.length;
+  const savPerCheck = parseDollars(state.savingsAmt);
+  const totalBills = state.bills.reduce((s,b) => s + parseDollars(b.amount), 0);
+  const totalCats = state.cats.reduce((s,c) => s + parseDollars(c.amount), 0);
+  const totalSav = savPerCheck * paydays.length;
+  const room = monthlyIncome - totalBills - totalCats - totalSav;
+
+  document.getElementById('sumIncome').textContent = fmt(monthlyIncome);
+  document.getElementById('sumBills').textContent = fmt(totalBills);
+  document.getElementById('sumSpend').textContent = fmt(totalCats);
+  document.getElementById('sumRoom').textContent = fmt(room);
+  document.getElementById('sumRoom').className = 'sum-value ' + (room >= 0 ? 'blue' : 'red');
+
+  // Calendar
+  renderCalendar(year, month, paydays);
+
+  // Bills list
+  const blist = document.getElementById('monthBillsList');
+  if (state.bills.length === 0) {
+    blist.innerHTML = '<div class="empty-state">No bills yet — add them in Setup.</div>';
+  } else {
+    blist.innerHTML = state.bills.map(b => `
+      <div class="pw-item bill">
+        <span class="pw-item-name">${esc(b.name||'Unnamed bill')}</span>
+        <span class="pw-item-due">${b.due ? 'Due the ' + ordinal(b.due) : ''}</span>
+        <span class="pw-item-amt">${fmt(b.amount)}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function renderCalendar(year, month, paydays) {
+  const cal = document.getElementById('billsCalendar');
+  cal.innerHTML = '';
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  days.forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'cal-day-header';
+    h.textContent = d;
+    cal.appendChild(h);
+  });
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const today = new Date();
+  const paydayNums = paydays.map(p => p.getDate());
+  const billsByDay = {};
+  state.bills.forEach(b => {
+    const d = parseInt(b.due);
+    if (d >= 1 && d <= 31) {
+      if (!billsByDay[d]) billsByDay[d] = [];
+      billsByDay[d].push(b);
+    }
+  });
+
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div'); el.className = 'cal-day empty'; cal.appendChild(el);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    const isToday = today.getFullYear()===year && today.getMonth()===month && today.getDate()===d;
+    const isPay = paydayNums.includes(d);
+    const hasBill = !!billsByDay[d];
+    if (isToday) el.classList.add('today');
+    if (hasBill) el.classList.add('has-bill');
+    let html = `<div class="cal-day-num">${d}</div>`;
+    if (isPay) html += `<span class="cal-pay-tag">💵 Pay</span>`;
+    if (billsByDay[d]) {
+      billsByDay[d].forEach(b => {
+        html += `<span class="cal-bill-tag">${esc(b.name||'Bill')}</span>`;
+      });
+    }
+    el.innerHTML = html;
+    cal.appendChild(el);
+  }
+}
+
+// ─── PAYWEEK VIEW ───
+function renderPayweekView() {
+  const year = state.currentYear, month = state.currentMonth;
+  const paydays = getPaydays(year, month);
+  const container = document.getElementById('payweeksContainer');
+
+  if (!state.paycheckAmt || !state.nextPayday) {
+    container.innerHTML = '<div class="empty-state">Add your paycheck amount and next payday in Setup first.</div>';
+    return;
+  }
+
+  if (paydays.length === 0) {
+    container.innerHTML = '<div class="empty-state">No paychecks fall in this month. Try another month.</div>';
+    return;
+  }
+
+  const paycheck = parseDollars(state.paycheckAmt);
+  const savPerCheck = parseDollars(state.savingsAmt);
+  const spendPerCheck = state.cats.map(c => ({ ...c, amt: parseDollars(c.amount) / paydays.length }));
+
+  // Assign bills to paycheck: bill due date → find last payday before or on due date
+  const billAssignments = Array.from({length: paydays.length}, () => []);
+  state.bills.forEach(b => {
+    const due = parseInt(b.due);
+    if (!due) { billAssignments[0].push(b); return; }
+    // find the paycheck that comes just before the due date
+    let assigned = 0;
+    for (let i = paydays.length - 1; i >= 0; i--) {
+      if (paydays[i].getDate() <= due) { assigned = i; break; }
+    }
+    billAssignments[assigned].push(b);
+  });
+
+  container.innerHTML = '';
+  paydays.forEach((pd, i) => {
+    const bills = billAssignments[i];
+    const billTotal = bills.reduce((s,b) => s + parseDollars(b.amount), 0);
+    const catTotal = spendPerCheck.reduce((s,c) => s + c.amt, 0);
+    const leftover = paycheck - savPerCheck - billTotal - catTotal;
+
+    const dateStr = pd.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
+    const endDate = new Date(pd.getTime() + 13*86400000).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+
+    const card = document.createElement('div');
+    card.className = 'payweek-card';
+
+    let billsHtml = bills.length === 0
+      ? '<div style="font-size:0.72rem;color:var(--text3);font-style:italic;padding:0.4rem 0;">No bills due this pay period 🎉</div>'
+      : bills.map(b => `
+          <div class="pw-item bill">
+            <span class="pw-item-name">${esc(b.name||'Bill')}</span>
+            <span class="pw-item-due">${b.due ? 'due ' + ordinal(b.due) : ''}</span>
+            <span class="pw-item-amt">${fmt(b.amount)}</span>
+          </div>`).join('');
+
+    let catsHtml = spendPerCheck.length === 0
+      ? '<div style="font-size:0.72rem;color:var(--text3);font-style:italic;padding:0.4rem 0;">No spending categories yet.</div>'
+      : spendPerCheck.map(c => `
+          <div class="pw-item cat">
+            <span class="pw-item-name">${esc(c.name||'Category')}</span>
+            <span class="pw-item-due">½ of monthly</span>
+            <span class="pw-item-amt">${fmt(c.amt)}</span>
+          </div>`).join('');
+
+    const leftClass = leftover >= 200 ? 'ok' : leftover >= 0 ? 'warn' : 'danger';
+
+    card.innerHTML = `
+      <div class="payweek-header">
+        <div>
+          <div class="payweek-label">Paycheck ${i+1} of ${paydays.length}</div>
+          <div class="payweek-date">${dateStr} → ${endDate}</div>
+        </div>
+        <div class="payweek-amount">${fmt(paycheck)}</div>
+      </div>
+      <div class="payweek-body">
+        ${savPerCheck > 0 ? `
+        <div class="pw-section-title">Auto-Savings (Transfer Out First)</div>
+        <div class="pw-items">
+          <div class="pw-item sav">
+            <span class="pw-item-name">→ ${esc(state.savingsBank||'Savings account')}</span>
+            <span class="pw-item-due">transfer on payday</span>
+            <span class="pw-item-amt">${fmt(savPerCheck)}</span>
+          </div>
+        </div>` : ''}
+        <div class="pw-section-title">Bills Due This Period</div>
+        <div class="pw-items">${billsHtml}</div>
+        <div class="pw-section-title">Spending Budget</div>
+        <div class="pw-items">${catsHtml}</div>
+        <div class="pw-leftover">
+          <span class="pw-leftover-label">💨 Breathing room</span>
+          <span class="pw-leftover-val ${leftClass}">${fmt(leftover)}</span>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ─── SAVINGS VIEW ───
+function renderSavingsView() {
+  const paydays = getPaydays(state.currentYear, state.currentMonth);
+  const savPerCheck = parseDollars(state.savingsAmt);
+  const bank = state.savingsBank || 'your savings account';
+  const monthly = savPerCheck * paydays.length;
+  const annual = savPerCheck * 26;
+
+  document.getElementById('savingsSummary').innerHTML = savPerCheck > 0
+    ? `You auto-save <strong>${fmt(savPerCheck)}</strong> per paycheck → <strong>${fmt(monthly)}</strong> this month → <strong>${fmt(annual)}</strong>/year<br>
+       Transfer to: <strong>${esc(bank)}</strong> — set this up as an automatic transfer on payday so you never have to think about it.`
+    : 'Set your auto-savings amount in Setup to see your projection.';
+
+  const container = document.getElementById('savGoalsDisplay');
+  if (state.savGoals.length === 0) {
+    container.innerHTML = '<div class="empty-state">Add savings goals in Setup — name them something exciting! 🎯</div>';
+    return;
+  }
+  container.innerHTML = '';
+  state.savGoals.forEach((g, i) => {
+    const saved = parseDollars(g.saved);
+    const target = parseDollars(g.target);
+    const pct = target > 0 ? Math.min(100, Math.round((saved/target)*100)) : 0;
+    const monthsLeft = (monthly > 0 && target > saved) ? Math.ceil((target - saved) / monthly) : null;
+
+    const el = document.createElement('div');
+    el.className = 'sav-goal-item';
+    el.innerHTML = `
+      <div class="sav-goal-row">
+        <div class="sav-goal-name">${esc(g.name || 'Unnamed goal')}</div>
+        <div class="sav-goal-pct">${pct}%</div>
+      </div>
+      <div class="sav-bar-bg"><div class="sav-bar-fill" style="width:${pct}%"></div></div>
+      <div class="sav-bar-nums">
+        <span>${fmt(saved)} saved</span>
+        ${monthsLeft ? `<span>~${monthsLeft} month${monthsLeft===1?'':'s'} to go</span>` : ''}
+        <span>Goal: ${fmt(target)}</span>
+      </div>
+      <div class="sav-add-row">
+        <input class="sav-add-input" type="number" placeholder="Add $ saved..." id="savAdd_${i}" min="0">
+        <button class="sav-add-btn" onclick="addToSavGoal(${i})">+ Add</button>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+function addToSavGoal(i) {
+  const inp = document.getElementById('savAdd_' + i);
+  const val = parseFloat(inp.value) || 0;
+  if (val <= 0) return;
+  state.savGoals[i].saved = (parseDollars(state.savGoals[i].saved) + val);
+  inp.value = '';
+  renderSavGoals();
+  save();
+  renderSavingsView();
+}
+
+function ordinal(n) {
+  n = parseInt(n);
+  const s = ['th','st','nd','rd'], v = n % 100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
+
+// ─── INIT ───
+load();
+
+// Pre-populate example data if empty
+if (state.bills.length === 0) {
+  state.bills = [
+    { name: 'Rent', amount: '900', due: '1' },
+    { name: 'Electric', amount: '80', due: '15' },
+    { name: 'Phone', amount: '60', due: '22' },
+  ];
+  renderBills();
+}
+if (state.cats.length === 0) {
+  state.cats = [
+    { name: 'Groceries', amount: '300' },
+    { name: 'Food delivery', amount: '100' },
+    { name: 'Fun money', amount: '150' },
+    { name: 'Gas / transport', amount: '80' },
+  ];
+  renderCats();
+}
+if (state.savGoals.length === 0) {
+  state.savGoals = [
+    { name: '🌏 Travel fund', saved: 0, target: '2000' },
+    { name: '🛡️ Emergency buffer', saved: 0, target: '1000' },
+  ];
+  renderSavGoals();
+}
+refreshViews();
+</script>
+
+</body>
+</html>
