@@ -1,0 +1,1077 @@
+import { useState, useEffect, useRef } from "react";
+
+// ── Design tokens ─────────────────────────────────────────────
+const C = {
+  bg: "#0A0C12", surface: "#111318", card: "#161922", border: "#1E2130",
+  borderHover: "#2A2F42", text: "#E4E6F0", muted: "#4A5070", faint: "#1A1E2A",
+  accent: "#5B9CF6", accentDim: "#0F1F3A", green: "#4EC98A", greenDim: "#0A2018",
+  amber: "#F0C040", amberDim: "#251C00", rose: "#F06878", roseDim: "#250A0E",
+  purple: "#A07AF0", purpleDim: "#170F2A", teal: "#3EC8C0", tealDim: "#071E1C",
+  blue2: "#6A9BF5", pa: "#8A7AF0", oa: "#3EC8C0",
+};
+
+const TABS = [
+  { id:"planner", label:"Daily", icon:"◈" },
+  { id:"school",  label:"WGU", icon:"◉" },
+  { id:"budget",  label:"Budget", icon:"◎" },
+  { id:"habits",  label:"Habits", icon:"◍" },
+  { id:"adhd",    label:"ADHD", icon:"◌" },
+];
+
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const now = new Date();
+
+// ── In-memory store ───────────────────────────────────────────
+const mem = {};
+const ms = (k,v) => { mem[k]=v; };
+const ml = (k,d) => mem[k]!==undefined ? mem[k] : d;
+
+// ══════════════════════════════════════════════════════════════
+export default function LifeOS() {
+  const [tab, setTab] = useState("planner");
+  return (
+    <div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"'Courier New',monospace"}}>
+      <style>{`
+        *{box-sizing:border-box}
+        ::-webkit-scrollbar{width:3px}
+        ::-webkit-scrollbar-thumb{background:${C.border};border-radius:2px}
+        button{cursor:pointer;font-family:'Courier New',monospace}
+        input,textarea,select{font-family:'Courier New',monospace;outline:none}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .fade{animation:fadeUp .3s ease forwards}
+        .hover-card:hover{border-color:${C.borderHover}!important;background:${C.faint}!important}
+        .tab-btn:hover{color:${C.text}!important}
+        .row-hover:hover{background:${C.faint}!important}
+      `}</style>
+
+      {/* Header */}
+      <div style={{borderBottom:`1px solid ${C.border}`,padding:"14px 22px",
+        display:"flex",alignItems:"center",justifyContent:"space-between",background:C.surface}}>
+        <div>
+          <div style={{fontSize:16,letterSpacing:".15em",color:C.accent}}>◈ LIFE.OS</div>
+          <div style={{fontSize:9,color:C.muted,letterSpacing:".2em",marginTop:1}}>
+            {DAYS[now.getDay()].toUpperCase()} · {MONTHS[now.getMonth()].slice(0,3).toUpperCase()} {now.getDate()}, {now.getFullYear()}
+          </div>
+        </div>
+        <div style={{fontSize:9,color:C.muted,letterSpacing:".15em"}}>JATAYA · PERSONAL CONTROL CENTER</div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:"flex",gap:2,padding:"8px 22px",borderBottom:`1px solid ${C.border}`,
+        background:C.surface,overflowX:"auto"}}>
+        {TABS.map(t=>(
+          <button key={t.id} className="tab-btn" onClick={()=>setTab(t.id)} style={{
+            padding:"6px 16px",borderRadius:6,border:"none",
+            background:tab===t.id?C.faint:"transparent",
+            color:tab===t.id?C.accent:C.muted,
+            fontSize:10,letterSpacing:".12em",transition:"all .2s",
+            borderBottom:tab===t.id?`2px solid ${C.accent}`:"2px solid transparent",
+            whiteSpace:"nowrap",
+          }}>{t.icon} {t.label.toUpperCase()}</button>
+        ))}
+      </div>
+
+      <div style={{padding:"20px 22px",maxWidth:900,margin:"0 auto"}} className="fade" key={tab}>
+        {tab==="planner" && <PlannerTab />}
+        {tab==="school"  && <SchoolTab />}
+        {tab==="budget"  && <BudgetTab />}
+        {tab==="habits"  && <HabitsTab />}
+        {tab==="adhd"    && <ADHDTab />}
+      </div>
+    </div>
+  );
+}
+
+// ── Shared Card ───────────────────────────────────────────────
+function Card({title,accent,children,right,noPad}){
+  return (
+    <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,
+      overflow:"hidden",marginBottom:14}}>
+      <div style={{padding:"10px 16px",borderBottom:`1px solid ${C.border}`,
+        display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{fontSize:9,letterSpacing:".2em",color:accent||C.muted}}>{title}</div>
+        {right}
+      </div>
+      <div style={noPad?{}:{padding:"14px 16px"}}>{children}</div>
+    </div>
+  );
+}
+
+function Inp({value,onChange,placeholder,onKeyDown,style={}}){
+  return <input value={value} onChange={onChange} placeholder={placeholder} onKeyDown={onKeyDown}
+    style={{background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+      padding:"8px 12px",color:C.text,fontSize:12,width:"100%",...style}}/>;
+}
+
+function Btn({onClick,children,color,style={}}){
+  const bg = color ? color+"22" : C.faint;
+  const bc = color ? color+"44" : C.border;
+  const tc = color || C.muted;
+  return <button onClick={onClick} style={{padding:"7px 14px",borderRadius:8,
+    background:bg,border:`1px solid ${bc}`,color:tc,fontSize:10,
+    letterSpacing:".08em",transition:"all .2s",...style}}>{children}</button>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🧠 DAILY PLANNER
+// ══════════════════════════════════════════════════════════════
+function PlannerTab(){
+  const [main,setMain]=useState(ml("main",""));
+  const [tasks,setTasks]=useState(ml("tasks",[]));
+  const [newTask,setNewTask]=useState("");
+  const [energy,setEnergy]=useState(ml("energy","med"));
+  const [wins,setWins]=useState(ml("wins",""));
+  const [reminders,setReminders]=useState(ml("reminders",[]));
+  const [newRem,setNewRem]=useState({text:"",month:now.getMonth()+1});
+
+  const saveTasks=t=>{setTasks(t);ms("tasks",t);};
+  const addTask=()=>{
+    if(!newTask.trim())return;
+    saveTasks([...tasks,{id:Date.now(),text:newTask.trim(),done:false,star:false}]);
+    setNewTask("");
+  };
+  const toggle=id=>saveTasks(tasks.map(t=>t.id===id?{...t,done:!t.done}:t));
+  const star=id=>saveTasks(tasks.map(t=>t.id===id?{...t,star:!t.star}:t));
+  const remove=id=>saveTasks(tasks.filter(t=>t.id!==id));
+
+  const addRem=()=>{
+    if(!newRem.text.trim())return;
+    const r=[...reminders,{id:Date.now(),...newRem}];
+    setReminders(r);ms("reminders",r);
+    setNewRem({text:"",month:now.getMonth()+1});
+  };
+
+  const thisMonth=reminders.filter(r=>+r.month===now.getMonth()+1);
+  const done=tasks.filter(t=>t.done).length;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+
+  const energyMap=[
+    {v:"low",l:"🪫 Low",c:C.rose},{v:"med",l:"⚡ Medium",c:C.amber},{v:"high",l:"🔥 High",c:C.green}
+  ];
+
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+      <div>
+        <Card title="◈ THE ONE THING TODAY" accent={C.accent}>
+          <div style={{fontSize:10,color:C.muted,marginBottom:8}}>What MUST get done today?</div>
+          <Inp value={main} onChange={e=>{setMain(e.target.value);ms("main",e.target.value);}}
+            placeholder="Your #1 priority..."/>
+        </Card>
+
+        <Card title="◎ ENERGY CHECK" accent={C.amber}>
+          <div style={{display:"flex",gap:8}}>
+            {energyMap.map(e=>(
+              <button key={e.v} onClick={()=>{setEnergy(e.v);ms("energy",e.v);}} style={{
+                flex:1,padding:"8px 4px",borderRadius:8,border:`1px solid`,
+                borderColor:energy===e.v?e.c:C.border,
+                background:energy===e.v?e.c+"22":"transparent",
+                color:energy===e.v?e.c:C.muted,fontSize:10,transition:"all .2s",
+              }}>{e.l}</button>
+            ))}
+          </div>
+          <div style={{marginTop:10,fontSize:10,color:C.muted}}>
+            {energy==="low"&&<span style={{color:C.rose}}>💛 Low day — one tiny thing still counts.</span>}
+            {energy==="med"&&<span style={{color:C.amber}}>Steady pace. Check off what you can.</span>}
+            {energy==="high"&&<span style={{color:C.green}}>Tackle the hard stuff first! 🔥</span>}
+          </div>
+        </Card>
+
+        <Card title="◉ TODAY'S WINS" accent={C.green}>
+          <div style={{fontSize:10,color:C.muted,marginBottom:8}}>No win too small. Log it.</div>
+          <textarea value={wins} onChange={e=>{setWins(e.target.value);ms("wins",e.target.value);}}
+            placeholder="I made my bed. I drank water. I replied to that text..." rows={4}
+            style={{width:"100%",background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+              padding:"10px 12px",color:C.text,fontSize:11,resize:"vertical"}}/>
+        </Card>
+
+        <Card title="◌ MONTHLY REMINDERS" accent={C.teal}>
+          <div style={{display:"flex",gap:6,marginBottom:10}}>
+            <Inp value={newRem.text} onChange={e=>setNewRem(r=>({...r,text:e.target.value}))}
+              onKeyDown={e=>e.key==="Enter"&&addRem()} placeholder="Reminder..." style={{flex:1}}/>
+            <select value={newRem.month} onChange={e=>setNewRem(r=>({...r,month:+e.target.value}))}
+              style={{background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+                padding:"8px",color:C.text,fontSize:10,colorScheme:"dark"}}>
+              {MONTHS.map((m,i)=><option key={i} value={i+1}>{m.slice(0,3)}</option>)}
+            </select>
+            <Btn onClick={addRem} color={C.teal}>+</Btn>
+          </div>
+          {thisMonth.length>0&&<div style={{fontSize:9,color:C.teal,letterSpacing:".15em",marginBottom:6}}>THIS MONTH</div>}
+          {thisMonth.map(r=>(
+            <div key={r.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 10px",
+              borderRadius:6,background:C.tealDim,marginBottom:4,fontSize:11}}>
+              <span>{r.text}</span>
+              <button onClick={()=>{const nr=reminders.filter(x=>x.id!==r.id);setReminders(nr);ms("reminders",nr);}}
+                style={{background:"none",border:"none",color:C.muted,fontSize:10}}>✕</button>
+            </div>
+          ))}
+          {reminders.filter(r=>+r.month!==now.getMonth()+1).length>0&&
+            <div style={{fontSize:9,color:C.muted}}>+{reminders.filter(r=>+r.month!==now.getMonth()+1).length} in other months</div>}
+        </Card>
+      </div>
+
+      <div>
+        <Card title="◍ TODAY'S TASKS" accent={C.purple}
+          right={<span style={{fontSize:9,color:C.muted}}>{pct}% DONE</span>}>
+          <div style={{height:2,background:C.faint,borderRadius:99,marginBottom:12}}>
+            <div style={{height:"100%",width:`${pct}%`,background:C.purple,borderRadius:99,transition:"width .4s"}}/>
+          </div>
+          <div style={{display:"flex",gap:8,marginBottom:10}}>
+            <Inp value={newTask} onChange={e=>setNewTask(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&addTask()} placeholder="Add task..." style={{flex:1}}/>
+            <Btn onClick={addTask} color={C.purple}>+ ADD</Btn>
+          </div>
+          <div style={{maxHeight:340,overflowY:"auto",display:"flex",flexDirection:"column",gap:5}}>
+            {tasks.length===0&&<div style={{fontSize:11,color:C.muted,textAlign:"center",padding:20}}>No tasks yet ↑</div>}
+            {[...tasks].sort((a,b)=>b.star-a.star).map(t=>(
+              <div key={t.id} className="row-hover" style={{display:"flex",alignItems:"center",gap:8,
+                padding:"8px 10px",borderRadius:8,background:C.faint,
+                opacity:t.done?.5:1,transition:"all .2s"}}>
+                <button onClick={()=>toggle(t.id)} style={{
+                  width:16,height:16,borderRadius:4,border:`1px solid`,flexShrink:0,
+                  borderColor:t.done?C.green:C.border,
+                  background:t.done?C.green:"transparent",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:9,color:"#000"}}>
+                  {t.done&&"✓"}
+                </button>
+                <span style={{flex:1,fontSize:12,textDecoration:t.done?"line-through":"none",
+                  color:t.done?C.muted:C.text}}>{t.text}</span>
+                <button onClick={()=>star(t.id)} style={{background:"none",border:"none",
+                  color:t.star?C.amber:C.muted,fontSize:12}}>★</button>
+                <button onClick={()=>remove(t.id)} style={{background:"none",border:"none",
+                  color:C.muted,fontSize:10}}>✕</button>
+              </div>
+            ))}
+          </div>
+          {done>0&&done===tasks.length&&
+            <div style={{marginTop:10,textAlign:"center",fontSize:11,color:C.green}}>
+              ✦ All done. You crushed it today.
+            </div>}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🎓 WGU SCHOOL TRACKER
+// ══════════════════════════════════════════════════════════════
+const TOTAL_CU = 125;
+const TARGET_DATE = new Date("2028-05-01");
+
+const WGU_TERMS = [
+  { id:1, label:"Term 1 — Complete", dates:"Jul 1 – Dec 31, 2025", status:"done", est:"Dec 2025 ✓", courses:[
+    {id:"D389",name:"Learning Strategies in Higher Education",cu:4,type:"PA",done:true,tasks:["Task 1"]},
+    {id:"C802",name:"Foundations in Healthcare Information Management",cu:4,type:"PA",done:true,tasks:["Task 1"]},
+    {id:"D269",name:"Composition: Writing with a Strategy",cu:3,type:"PA",done:true,tasks:["Task 1"]},
+    {id:"D391",name:"Healthcare Ecosystems",cu:3,type:"OA",done:true},
+    {id:"D265",name:"Critical Thinking: Reason and Evidence",cu:3,type:"PA",done:true,tasks:["Task 1"]},
+  ]},
+  { id:2, label:"Term 2 — Current", dates:"Jan 1 – Jun 30, 2026", status:"active", est:"Apr 2026", courses:[
+    {id:"C804",name:"Medical Terminology",cu:3,type:"OA",done:true},
+    {id:"D268",name:"Intro to Communication: Connecting with Others",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+    {id:"D270",name:"Composition: Successful Self-Expression",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+    {id:"C190",name:"Introduction to Biology",cu:3,type:"OA",done:false,inProgress:true},
+  ]},
+  { id:3, label:"Term 3", dates:"Jul 1 – Dec 31, 2026", status:"upcoming", est:"Oct 2026", courses:[
+    {id:"D203",name:"Fundamentals of Anatomy and Physiology",cu:3,type:"OA",done:false},
+    {id:"C816",name:"Healthcare System Applications",cu:4,type:"PA",done:false,tasks:["Task 1"]},
+    {id:"C180",name:"Introduction to Psychology",cu:3,type:"OA",done:false},
+    {id:"C784",name:"Applied Healthcare Statistics",cu:4,type:"OA",done:false},
+  ]},
+  { id:4, label:"Term 4", dates:"Jan 1 – Jun 30, 2027", status:"upcoming", est:"Dec 2026", courses:[
+    {id:"C803",name:"Data Analytics and Information Governance",cu:4,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3","Task 4"]},
+    {id:"D198",name:"Global Arts and Humanities",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+    {id:"C963",name:"American Politics and the US Constitution",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+    {id:"D190",name:"Introduction to Healthcare IT Systems",cu:4,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+  ]},
+  { id:5, label:"Term 5", dates:"Jul 1 – Dec 31, 2027", status:"upcoming", est:"Mar 2027", courses:[
+    {id:"C810",name:"Foundations in Healthcare Data Management",cu:3,type:"OA",done:false},
+    {id:"C801",name:"Health Information Law and Regulations",cu:4,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+    {id:"C957",name:"Applied Algebra",cu:3,type:"OA",done:false},
+    {id:"C805",name:"Pathophysiology",cu:3,type:"OA",done:false},
+  ]},
+  { id:6, label:"Term 6", dates:"Jan 1 – Jun 30, 2028", status:"upcoming", est:"Jun 2027", courses:[
+    {id:"D398",name:"Introduction to Pharmacology",cu:3,type:"OA",done:false},
+    {id:"C815",name:"Quality and Performance Management and Methods",cu:4,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+    {id:"C808",name:"Classification Systems",cu:4,type:"OA",done:false},
+    {id:"D583",name:"Foundations in Public Health",cu:3,type:"OA",done:false},
+  ]},
+  { id:7, label:"Term 7", dates:"Jul 1 – Dec 31, 2027", status:"upcoming", est:"Oct 2027", courses:[
+    {id:"C807",name:"Healthcare Compliance",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+    {id:"C811",name:"Healthcare Financial Resource Management",cu:4,type:"PA",done:false,tasks:["Task 1"]},
+    {id:"C812",name:"Healthcare Reimbursement",cu:4,type:"PA",done:false,tasks:["Task 1","Task 2"]},
+    {id:"C813",name:"Healthcare Statistics and Research",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2"]},
+  ]},
+  { id:8, label:"Term 8", dates:"Jan 1 – Jun 30, 2028", status:"upcoming", est:"Feb 2028", courses:[
+    {id:"D033",name:"Healthcare Information Systems Management",cu:3,type:"OA",done:false},
+    {id:"D255",name:"Professional Practice Experience I: Technical",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2"]},
+    {id:"D257",name:"Healthcare Project Management",cu:4,type:"PA",done:false,tasks:["Task 1","Task 2"]},
+    {id:"D256",name:"Principles of Management in Health Information Management",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2"]},
+  ]},
+  { id:9, label:"Term 9 — Final", dates:"Jul 1 – Dec 31, 2028", status:"upcoming", est:"May 2028 🎓", courses:[
+    {id:"D258",name:"Organizational Leadership in Healthcare",cu:3,type:"PA",done:false,tasks:["Task 1","Task 2"]},
+    {id:"D259",name:"Professional Practice Experience II: Management",cu:4,type:"PA",done:false,tasks:["Task 1","Task 2","Task 3"]},
+    {id:"D260",name:"Health Information Management Capstone",cu:4,type:"PA",done:false,tasks:["Task 1"]},
+  ]},
+];
+
+function getCourse(id){ for(const t of WGU_TERMS){const c=t.courses.find(x=>x.id===id);if(c)return c;} return null; }
+
+function SchoolTab(){
+  const [,rerender]=useState(0);
+  const force=()=>rerender(n=>n+1);
+
+  const cDone=id=>{ const c=getCourse(id); return (c&&c.done)||ml("cd_"+id,false); };
+  const setCDone=(id,v)=>{ ms("cd_"+id,v); force(); };
+  const getAttempts=id=>ml("oa_"+id,[{date:"",result:null}]);
+  const setAttempts=(id,arr)=>{ ms("oa_"+id,arr); force(); };
+  const getTask=(cid,ti)=>ml("pa_"+cid+"_"+ti,{submitted:false,revision:false,passed:false});
+  const setTask=(cid,ti,obj)=>{ ms("pa_"+cid+"_"+ti,obj); force(); };
+  const panelOpen=id=>ml("po_"+id,false);
+  const setPanelOpen=(id,v)=>{ ms("po_"+id,v); force(); };
+  const termOpen=id=>{ const v=ml("to_"+id,null); return v===null?(WGU_TERMS.find(t=>t.id===id)?.status==="active"):v; };
+  const setTermOpen=(id,v)=>{ ms("to_"+id,v); force(); };
+  const [toast,setToast]=useState("");
+  const showToast=msg=>{ setToast(msg); setTimeout(()=>setToast(""),2400); };
+
+  // Countdown
+  const diff=TARGET_DATE-new Date();
+  const totalDays=Math.max(0,Math.floor(diff/86400000));
+  const yr=Math.floor(totalDays/365);
+  const mo=Math.floor((totalDays%365)/30);
+  const wk=Math.floor((totalDays%30)/7);
+  const dy=totalDays%7;
+
+  // Stats
+  let totalC=0,doneC=0,cuEarned=0;
+  WGU_TERMS.forEach(t=>t.courses.forEach(c=>{ totalC++; if(cDone(c.id)){doneC++;cuEarned+=c.cu;} }));
+  const pct=Math.round(cuEarned/TOTAL_CU*100);
+
+  const handleAttemptResult=(cid,idx,result)=>{
+    const atts=getAttempts(cid);
+    atts[idx].result=result;
+    if(result==="pass"){
+      setAttempts(cid,atts);
+      setCDone(cid,true);
+      setPanelOpen(cid,false);
+      showToast("OA Passed! Course complete! 🎉");
+    } else {
+      if(atts.length<4) atts.push({date:"",result:null});
+      setAttempts(cid,atts);
+      showToast("Attempt logged. You've got this! 💪");
+      force();
+    }
+  };
+
+  const handlePA=(cid,ti,field)=>{
+    const ts={...getTask(cid,ti)};
+    if(field==="submitted"){ ts.submitted=!ts.submitted; if(!ts.submitted){ts.revision=false;ts.passed=false;} }
+    else if(field==="revision"){ if(!ts.submitted)return; ts.revision=!ts.revision; }
+    else if(field==="passed"){ if(!ts.submitted)return; ts.passed=!ts.passed; }
+    setTask(cid,ti,ts);
+    if(ts.passed){
+      const c=getCourse(cid);
+      if(c?.tasks){
+        const allP=c.tasks.every((_,i)=>{ const t2=getTask(cid,i); return i===ti?ts.passed:t2.passed; });
+        if(allP){ setCDone(cid,true); setPanelOpen(cid,false); showToast("All tasks passed! Course complete! 🎉"); return; }
+        showToast("Task passed! ✓");
+      }
+    }
+    force();
+  };
+
+  return (
+    <div style={{position:"relative"}}>
+      {toast&&<div style={{position:"fixed",bottom:30,left:"50%",transform:"translateX(-50%)",
+        background:C.teal,color:"#000",padding:"10px 22px",borderRadius:99,
+        fontSize:13,fontWeight:"bold",zIndex:999,boxShadow:`0 4px 20px ${C.teal}44`}}>{toast}</div>}
+
+      {/* Countdown */}
+      <div style={{background:`linear-gradient(135deg,${C.teal}22,${C.accent}11)`,
+        border:`1px solid ${C.teal}44`,borderRadius:14,padding:"16px 20px",marginBottom:14}}>
+        <div style={{fontSize:9,color:C.teal,letterSpacing:".2em",marginBottom:12}}>COUNTDOWN TO GRADUATION · MAY 2028</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
+          {[[yr,"YRS"],[mo,"MOS"],[wk,"WKS"],[dy,"DAYS"]].map(([n,l])=>(
+            <div key={l} style={{textAlign:"center",background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 4px"}}>
+              <div style={{fontSize:28,fontWeight:"bold",color:C.teal,lineHeight:1}}>{n}</div>
+              <div style={{fontSize:8,color:C.muted,letterSpacing:".15em",marginTop:3}}>{l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:11,color:C.text}}>🎯 BS Health Information Management</div>
+          <div style={{fontSize:9,color:C.muted}}>Saving ~1.5 years</div>
+        </div>
+      </div>
+
+      {/* Overall progress */}
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:"16px 20px",marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:10}}>
+          <div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:".15em"}}>OVERALL PROGRESS</div>
+            <div style={{fontSize:10,color:C.muted,marginTop:2}}>{cuEarned} of {TOTAL_CU} credit units earned</div>
+          </div>
+          <div style={{fontSize:32,fontWeight:"bold",color:C.accent,lineHeight:1}}>{pct}%</div>
+        </div>
+        <div style={{height:6,background:C.faint,borderRadius:99,marginBottom:8}}>
+          <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${C.teal},${C.accent})`,
+            borderRadius:99,transition:"width .8s"}}/>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.muted}}>
+          <span><span style={{color:C.text,fontWeight:"bold"}}>{doneC}</span> courses done</span>
+          <span><span style={{color:C.text,fontWeight:"bold"}}>{totalC-doneC}</span> remaining</span>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{display:"flex",gap:14,marginBottom:14,flexWrap:"wrap"}}>
+        {[[C.oa,"OA"],[C.pa,"PA"],[C.green,"Complete"],[C.accent,"In Progress"]].map(([col,lbl])=>(
+          <div key={lbl} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:C.muted}}>
+            <div style={{width:7,height:7,borderRadius:"50%",background:col,flexShrink:0}}/>
+            {lbl}
+          </div>
+        ))}
+      </div>
+
+      {/* Terms */}
+      {WGU_TERMS.map(term=>{
+        const tDone=term.courses.filter(c=>cDone(c.id)).length;
+        const allDone=tDone===term.courses.length;
+        const isAct=term.status==="active";
+        const isOpen=termOpen(term.id);
+        const pillColor=allDone?C.green:isAct?C.accent:C.muted;
+        const pillLabel=allDone?"COMPLETE":isAct?"IN PROGRESS":"UPCOMING";
+
+        return (
+          <div key={term.id} style={{marginBottom:8}}>
+            <button onClick={()=>setTermOpen(term.id,!isOpen)} style={{
+              width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
+              padding:"12px 16px",background:C.card,border:`1px solid ${C.border}`,
+              borderRadius:isOpen?"12px 12px 0 0":"12px",color:C.text,
+              transition:"all .2s",
+            }}>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontSize:11,color:isAct?C.accent:C.text,letterSpacing:".05em"}}>{term.label}</div>
+                <div style={{fontSize:9,color:C.muted,marginTop:2}}>{term.dates}</div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:9,color:C.muted}}>{tDone}/{term.courses.length}</span>
+                <span style={{fontSize:8,padding:"3px 8px",borderRadius:99,
+                  background:pillColor+"22",color:pillColor,letterSpacing:".08em"}}>{pillLabel}</span>
+                <span style={{fontSize:10,color:C.muted,transform:isOpen?"rotate(180deg)":"none",
+                  transition:"transform .2s",display:"inline-block"}}>▾</span>
+              </div>
+            </button>
+
+            {isOpen&&(
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderTop:"none",
+                borderRadius:"0 0 12px 12px",overflow:"hidden"}}>
+                {term.courses.map((c,ci)=>{
+                  const done=cDone(c.id);
+                  const inProg=c.inProgress&&!done;
+                  const pOpen=panelOpen(c.id);
+                  return (
+                    <div key={c.id} style={{borderTop:ci>0?`1px solid ${C.border}`:"none"}}>
+                      <button onClick={()=>{ if(!done)setPanelOpen(c.id,!pOpen); }} style={{
+                        width:"100%",display:"flex",alignItems:"center",gap:10,
+                        padding:"11px 16px",background:done?C.faint:"transparent",
+                        border:"none",color:C.text,transition:"background .15s",
+                      }}>
+                        <div style={{width:20,height:20,borderRadius:6,border:`1.5px solid`,flexShrink:0,
+                          borderColor:done?C.green:inProg?C.accent:C.border,
+                          background:done?C.green:inProg?C.accentDim:"transparent",
+                          display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:done?"#000":C.accent}}>
+                          {done?"✓":inProg?"→":""}
+                        </div>
+                        <div style={{flex:1,textAlign:"left"}}>
+                          <div style={{fontSize:11,color:done?C.muted:C.text,
+                            textDecoration:done?"line-through":"none"}}>{c.name}</div>
+                          <div style={{display:"flex",gap:6,marginTop:3,alignItems:"center"}}>
+                            <span style={{fontSize:9,color:C.muted}}>{c.id}</span>
+                            <span style={{fontSize:8,padding:"1px 5px",borderRadius:4,
+                              background:c.type==="OA"?C.tealDim:C.purpleDim,
+                              color:c.type==="OA"?C.teal:C.pa}}>{c.type}</span>
+                          </div>
+                        </div>
+                        <span style={{fontSize:9,color:C.muted,flexShrink:0}}>{c.cu} CU</span>
+                        {!done&&<span style={{fontSize:9,color:C.muted,transform:pOpen?"rotate(180deg)":"none",
+                          transition:"transform .2s",display:"inline-block",flexShrink:0}}>▾</span>}
+                      </button>
+
+                      {/* OA Panel */}
+                      {!done&&pOpen&&c.type==="OA"&&(
+                        <div style={{padding:"10px 16px 14px",background:C.faint,borderTop:`1px solid ${C.border}`}}>
+                          {getAttempts(c.id).map((att,i)=>(
+                            <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                              <span style={{fontSize:10,color:C.muted,minWidth:70,flexShrink:0}}>Attempt {i+1}</span>
+                              <input type="date" value={att.date||""} onChange={e=>{
+                                const a=getAttempts(c.id); a[i].date=e.target.value; setAttempts(c.id,a);
+                              }} style={{flex:1,background:C.card,border:`1px solid ${C.border}`,borderRadius:6,
+                                padding:"5px 8px",color:C.text,fontSize:10,colorScheme:"dark"}}/>
+                              <button onClick={()=>handleAttemptResult(c.id,i,"pass")} style={{
+                                padding:"5px 10px",borderRadius:6,border:`1.5px solid`,fontSize:10,
+                                borderColor:att.result==="pass"?C.green:C.border,
+                                background:att.result==="pass"?C.green:C.greenDim,
+                                color:att.result==="pass"?"#000":C.green}}>Pass</button>
+                              <button onClick={()=>handleAttemptResult(c.id,i,"fail")} style={{
+                                padding:"5px 10px",borderRadius:6,border:`1.5px solid`,fontSize:10,
+                                borderColor:att.result==="fail"?C.rose:C.border,
+                                background:att.result==="fail"?C.rose:C.roseDim,
+                                color:att.result==="fail"?"#fff":C.rose}}>Fail</button>
+                            </div>
+                          ))}
+                          {getAttempts(c.id).length>=4&&
+                            <div style={{fontSize:10,color:C.amber,background:C.amberDim,
+                              borderRadius:8,padding:"6px 10px",textAlign:"center"}}>
+                              ⚠️ Max 4 attempts reached. Contact your mentor.
+                            </div>}
+                        </div>
+                      )}
+
+                      {/* PA Panel */}
+                      {!done&&pOpen&&c.type==="PA"&&c.tasks&&(
+                        <div style={{padding:"10px 16px 14px",background:C.faint,borderTop:`1px solid ${C.border}`}}>
+                          {c.tasks.map((taskLabel,ti)=>{
+                            const ts=getTask(c.id,ti);
+                            return (
+                              <div key={ti} style={{marginBottom:10}}>
+                                <div style={{fontSize:10,color:ts.passed?C.green:C.muted,marginBottom:6,
+                                  textDecoration:ts.passed?"line-through":"none"}}>
+                                  {taskLabel}{ts.passed?" ✓":""}
+                                </div>
+                                <div style={{display:"flex",gap:6}}>
+                                  {[
+                                    {f:"submitted",l:"Submitted",c:C.teal,active:ts.submitted,disabled:ts.passed},
+                                    {f:"revision",l:"Revision",c:C.amber,active:ts.revision,disabled:!ts.submitted||ts.passed},
+                                    {f:"passed",l:"Passed",c:C.green,active:ts.passed,disabled:!ts.submitted},
+                                  ].map(btn=>(
+                                    <button key={btn.f} onClick={()=>!btn.disabled&&handlePA(c.id,ti,btn.f)} style={{
+                                      display:"flex",alignItems:"center",gap:5,padding:"5px 10px",
+                                      borderRadius:7,border:`1.5px solid`,
+                                      borderColor:btn.active?btn.c:C.border,
+                                      background:btn.active?btn.c+"22":C.card,
+                                      color:btn.active?btn.c:C.muted,fontSize:10,
+                                      opacity:btn.disabled?.4:1,cursor:btn.disabled?"not-allowed":"pointer",
+                                    }}>
+                                      <div style={{width:6,height:6,borderRadius:"50%",
+                                        background:btn.active?btn.c:C.border,flexShrink:0}}/>
+                                      {btn.l}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 💰 BUDGET
+// ══════════════════════════════════════════════════════════════
+function BudgetTab(){
+  const [income,setIncome]=useState(ml("income",""));
+  const [bills,setBills]=useState(ml("bills",[]));
+  const [newBill,setNewBill]=useState({name:"",amount:"",due:"",category:"bills"});
+  const [savings,setSavings]=useState(ml("savings",[]));
+  const [newSav,setNewSav]=useState({name:"",goal:"",saved:""});
+  const [spend,setSpend]=useState(ml("spend",[]));
+  const [newSpend,setNewSpend]=useState({name:"",amount:"",category:"food"});
+
+  const saveBills=b=>{setBills(b);ms("bills",b);};
+  const saveSavings=s=>{setSavings(s);ms("savings",s);};
+  const saveSpend=s=>{setSpend(s);ms("spend",s);};
+
+  const addBill=()=>{
+    if(!newBill.name||!newBill.amount)return;
+    saveBills([...bills,{id:Date.now(),...newBill,paid:false}]);
+    setNewBill({name:"",amount:"",due:"",category:"bills"});
+  };
+  const togglePaid=id=>saveBills(bills.map(b=>b.id===id?{...b,paid:!b.paid}:b));
+  const removeBill=id=>saveBills(bills.filter(b=>b.id!==id));
+
+  const addSav=()=>{
+    if(!newSav.name||!newSav.goal)return;
+    saveSavings([...savings,{id:Date.now(),...newSav}]);
+    setNewSav({name:"",goal:"",saved:""});
+  };
+
+  const addSpend=()=>{
+    if(!newSpend.name||!newSpend.amount)return;
+    saveSpend([...spend,{id:Date.now(),...newSpend}]);
+    setNewSpend({name:"",amount:"",category:"food"});
+  };
+
+  const inc=parseFloat(income)||0;
+  const totalBills=bills.reduce((s,b)=>s+parseFloat(b.amount||0),0);
+  const totalSpend=spend.reduce((s,x)=>s+parseFloat(x.amount||0),0);
+  const remaining=inc-totalBills-totalSpend;
+
+  const catColors={bills:C.rose,food:C.amber,fun:C.purple,transport:C.teal,other:C.muted};
+  const cats=["bills","food","fun","transport","other"];
+
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+      <div>
+        {/* Income */}
+        <Card title="◈ PAYCHECK / INCOME" accent={C.green}>
+          <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4}}>
+            <span style={{fontSize:16,color:C.muted}}>$</span>
+            <input value={income} onChange={e=>{setIncome(e.target.value);ms("income",e.target.value);}}
+              placeholder="0.00" type="number"
+              style={{flex:1,background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+                padding:"10px 12px",color:C.green,fontSize:20,fontWeight:"bold"}}/>
+          </div>
+          {inc>0&&(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:10}}>
+              {[["Bills",totalBills,C.rose],["Spent",totalSpend,C.amber],["Left",remaining,remaining<0?C.rose:C.green]].map(([l,v,c])=>(
+                <div key={l} style={{textAlign:"center",background:C.faint,borderRadius:8,padding:"8px 4px"}}>
+                  <div style={{fontSize:14,fontWeight:"bold",color:c}}>${v.toFixed(2)}</div>
+                  <div style={{fontSize:9,color:C.muted,marginTop:2}}>{l}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Bills */}
+        <Card title="◎ BILLS & RECURRING" accent={C.rose}>
+          <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:10}}>
+            <Inp value={newBill.name} onChange={e=>setNewBill(b=>({...b,name:e.target.value}))} placeholder="Bill name..."/>
+            <div style={{display:"flex",gap:6}}>
+              <input value={newBill.amount} onChange={e=>setNewBill(b=>({...b,amount:e.target.value}))}
+                placeholder="Amount" type="number"
+                style={{flex:1,background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+                  padding:"8px 10px",color:C.text,fontSize:12}}/>
+              <input value={newBill.due} onChange={e=>setNewBill(b=>({...b,due:e.target.value}))}
+                placeholder="Due date" type="date"
+                style={{flex:1,background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+                  padding:"8px 10px",color:C.text,fontSize:11,colorScheme:"dark"}}/>
+            </div>
+            <Btn onClick={addBill} color={C.rose} style={{width:"100%"}}>+ ADD BILL</Btn>
+          </div>
+          <div style={{maxHeight:200,overflowY:"auto",display:"flex",flexDirection:"column",gap:5}}>
+            {bills.map(b=>(
+              <div key={b.id} style={{display:"flex",alignItems:"center",gap:8,
+                padding:"8px 10px",borderRadius:8,background:C.faint,
+                opacity:b.paid?.5:1}}>
+                <button onClick={()=>togglePaid(b.id)} style={{
+                  width:16,height:16,borderRadius:4,border:`1px solid`,flexShrink:0,
+                  borderColor:b.paid?C.green:C.border,background:b.paid?C.green:"transparent",
+                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#000"}}>
+                  {b.paid&&"✓"}
+                </button>
+                <span style={{flex:1,fontSize:11,textDecoration:b.paid?"line-through":"none",
+                  color:b.paid?C.muted:C.text}}>{b.name}</span>
+                {b.due&&<span style={{fontSize:9,color:C.muted}}>Due {b.due}</span>}
+                <span style={{fontSize:12,color:b.paid?C.muted:C.rose,fontWeight:"bold"}}>${parseFloat(b.amount).toFixed(2)}</span>
+                <button onClick={()=>removeBill(b.id)} style={{background:"none",border:"none",color:C.muted,fontSize:10}}>✕</button>
+              </div>
+            ))}
+            {bills.length===0&&<div style={{fontSize:10,color:C.muted,textAlign:"center",padding:12}}>No bills added yet.</div>}
+          </div>
+        </Card>
+      </div>
+
+      <div>
+        {/* Savings */}
+        <Card title="◉ SAVINGS GOALS" accent={C.accent}>
+          <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:10}}>
+            <Inp value={newSav.name} onChange={e=>setNewSav(s=>({...s,name:e.target.value}))} placeholder="Goal name..."/>
+            <div style={{display:"flex",gap:6}}>
+              <input value={newSav.goal} onChange={e=>setNewSav(s=>({...s,goal:e.target.value}))}
+                placeholder="Goal $" type="number"
+                style={{flex:1,background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+                  padding:"8px 10px",color:C.text,fontSize:12}}/>
+              <input value={newSav.saved} onChange={e=>setNewSav(s=>({...s,saved:e.target.value}))}
+                placeholder="Saved $" type="number"
+                style={{flex:1,background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+                  padding:"8px 10px",color:C.text,fontSize:12}}/>
+            </div>
+            <Btn onClick={addSav} color={C.accent} style={{width:"100%"}}>+ ADD GOAL</Btn>
+          </div>
+          {savings.map(s=>{
+            const pct=s.goal?Math.min(100,Math.round(parseFloat(s.saved||0)/parseFloat(s.goal)*100)):0;
+            return (
+              <div key={s.id} style={{marginBottom:10,padding:"10px 12px",borderRadius:8,background:C.faint}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                  <span style={{fontSize:12}}>{s.name}</span>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <span style={{fontSize:10,color:C.accent}}>${parseFloat(s.saved||0).toFixed(0)} / ${parseFloat(s.goal).toFixed(0)}</span>
+                    <button onClick={()=>saveSavings(savings.filter(x=>x.id!==s.id))}
+                      style={{background:"none",border:"none",color:C.muted,fontSize:10}}>✕</button>
+                  </div>
+                </div>
+                <div style={{height:4,background:C.border,borderRadius:99}}>
+                  <div style={{height:"100%",width:`${pct}%`,background:pct>=100?C.green:C.accent,
+                    borderRadius:99,transition:"width .4s"}}/>
+                </div>
+                <div style={{fontSize:9,color:C.muted,marginTop:4}}>{pct}% saved</div>
+              </div>
+            );
+          })}
+          {savings.length===0&&<div style={{fontSize:10,color:C.muted,textAlign:"center",padding:12}}>No goals yet.</div>}
+        </Card>
+
+        {/* Spending */}
+        <Card title="◍ SPENDING LOG" accent={C.amber}>
+          <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:10}}>
+            <Inp value={newSpend.name} onChange={e=>setNewSpend(s=>({...s,name:e.target.value}))} placeholder="What did you spend on?"/>
+            <div style={{display:"flex",gap:6}}>
+              <input value={newSpend.amount} onChange={e=>setNewSpend(s=>({...s,amount:e.target.value}))}
+                placeholder="$" type="number"
+                style={{flex:1,background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+                  padding:"8px 10px",color:C.text,fontSize:12}}/>
+              <select value={newSpend.category} onChange={e=>setNewSpend(s=>({...s,category:e.target.value}))}
+                style={{flex:1,background:C.faint,border:`1px solid ${C.border}`,borderRadius:8,
+                  padding:"8px",color:C.text,fontSize:11,colorScheme:"dark"}}>
+                {cats.map(c=><option key={c} value={c}>{c.charAt(0).toUpperCase()+c.slice(1)}</option>)}
+              </select>
+            </div>
+            <Btn onClick={addSpend} color={C.amber} style={{width:"100%"}}>+ LOG SPEND</Btn>
+          </div>
+          <div style={{maxHeight:180,overflowY:"auto",display:"flex",flexDirection:"column",gap:4}}>
+            {spend.map(s=>(
+              <div key={s.id} style={{display:"flex",alignItems:"center",gap:8,
+                padding:"7px 10px",borderRadius:7,background:C.faint}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:catColors[s.category]||C.muted,flexShrink:0}}/>
+                <span style={{flex:1,fontSize:11}}>{s.name}</span>
+                <span style={{fontSize:9,color:catColors[s.category],background:catColors[s.category]+"22",
+                  padding:"2px 6px",borderRadius:4}}>{s.category}</span>
+                <span style={{fontSize:12,color:C.amber,fontWeight:"bold"}}>${parseFloat(s.amount).toFixed(2)}</span>
+                <button onClick={()=>saveSpend(spend.filter(x=>x.id!==s.id))}
+                  style={{background:"none",border:"none",color:C.muted,fontSize:10}}>✕</button>
+              </div>
+            ))}
+            {spend.length===0&&<div style={{fontSize:10,color:C.muted,textAlign:"center",padding:10}}>No spending logged yet.</div>}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 💊 HABITS & MEDS
+// ══════════════════════════════════════════════════════════════
+const DEFAULT_HABITS=[
+  {id:"meds",label:"Take meds",icon:"💊",color:C.rose,type:"meds"},
+  {id:"water",label:"Drink water",icon:"💧",color:C.teal,type:"habit"},
+  {id:"move",label:"Move body",icon:"🚶",color:C.green,type:"habit"},
+  {id:"eat",label:"Eat something",icon:"🍽️",color:C.amber,type:"habit"},
+  {id:"sleep",label:"Sleep by midnight",icon:"🌙",color:C.purple,type:"habit"},
+];
+
+function HabitsTab(){
+  const todayKey=today();
+  const [habits,setHabits]=useState(ml("habit_list",DEFAULT_HABITS));
+  const [checked,setChecked]=useState(ml("habit_check_"+todayKey,{}));
+  const [newHabit,setNewHabit]=useState({label:"",icon:"⭐",color:C.accent});
+  const [streaks,setStreaks]=useState(ml("streaks",{}));
+
+  const toggle=id=>{
+    const nc={...checked,[id]:!checked[id]};
+    setChecked(nc); ms("habit_check_"+todayKey,nc);
+    if(!checked[id]){
+      const s={...streaks,[id]:(streaks[id]||0)+1};
+      setStreaks(s); ms("streaks",s);
+    }
+  };
+  const addHabit=()=>{
+    if(!newHabit.label.trim())return;
+    const h=[...habits,{id:Date.now().toString(),...newHabit,type:"habit"}];
+    setHabits(h); ms("habit_list",h);
+    setNewHabit({label:"",icon:"⭐",color:C.accent});
+  };
+  const remove=id=>{
+    const h=habits.filter(x=>x.id!==id);
+    setHabits(h); ms("habit_list",h);
+  };
+
+  const doneCount=habits.filter(h=>checked[h.id]).length;
+  const ICONS=["💊","💧","🚶","🍽️","🌙","🧘","📚","🏃","💪","🥦","🫁","⭐","✅","🎯"];
+  const COLORS=[C.rose,C.teal,C.green,C.amber,C.purple,C.accent];
+
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+      <div>
+        <Card title="◈ TODAY'S HABITS & MEDS" accent={C.rose}
+          right={<span style={{fontSize:9,color:C.muted}}>{doneCount}/{habits.length} DONE</span>}>
+          <div style={{height:2,background:C.faint,borderRadius:99,marginBottom:14}}>
+            <div style={{height:"100%",width:habits.length?`${doneCount/habits.length*100}%`:"0%",
+              background:`linear-gradient(90deg,${C.rose},${C.purple})`,borderRadius:99,transition:"width .4s"}}/>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {habits.map(h=>(
+              <button key={h.id} onClick={()=>toggle(h.id)} style={{
+                display:"flex",alignItems:"center",gap:12,padding:"12px 14px",
+                borderRadius:10,border:`1px solid`,
+                borderColor:checked[h.id]?h.color:C.border,
+                background:checked[h.id]?h.color+"18":C.faint,
+                transition:"all .2s",
+              }}>
+                <span style={{fontSize:18}}>{h.icon}</span>
+                <span style={{flex:1,fontSize:12,textAlign:"left",
+                  color:checked[h.id]?h.color:C.text,
+                  textDecoration:checked[h.id]?"line-through":"none"}}>{h.label}</span>
+                {streaks[h.id]>1&&<span style={{fontSize:9,color:C.amber}}>🔥{streaks[h.id]}</span>}
+                <div style={{width:20,height:20,borderRadius:6,border:`1.5px solid`,
+                  borderColor:checked[h.id]?h.color:C.border,
+                  background:checked[h.id]?h.color:"transparent",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:11,color:"#000"}}>
+                  {checked[h.id]&&"✓"}
+                </div>
+              </button>
+            ))}
+          </div>
+          {doneCount===habits.length&&habits.length>0&&
+            <div style={{marginTop:12,textAlign:"center",fontSize:11,color:C.green}}>
+              ✦ Full streak today! Amazing.
+            </div>}
+        </Card>
+      </div>
+
+      <div>
+        <Card title="◉ ADD CUSTOM HABIT" accent={C.purple}>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <Inp value={newHabit.label} onChange={e=>setNewHabit(h=>({...h,label:e.target.value}))}
+              onKeyDown={e=>e.key==="Enter"&&addHabit()} placeholder="Habit name..."/>
+            <div>
+              <div style={{fontSize:9,color:C.muted,marginBottom:6,letterSpacing:".1em"}}>ICON</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {ICONS.map(ic=>(
+                  <button key={ic} onClick={()=>setNewHabit(h=>({...h,icon:ic}))} style={{
+                    width:32,height:32,borderRadius:8,border:`1.5px solid`,
+                    borderColor:newHabit.icon===ic?C.accent:C.border,
+                    background:newHabit.icon===ic?C.accentDim:C.faint,fontSize:14,
+                  }}>{ic}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{fontSize:9,color:C.muted,marginBottom:6,letterSpacing:".1em"}}>COLOR</div>
+              <div style={{display:"flex",gap:6}}>
+                {COLORS.map(col=>(
+                  <button key={col} onClick={()=>setNewHabit(h=>({...h,color:col}))} style={{
+                    width:24,height:24,borderRadius:"50%",background:col,border:`2px solid`,
+                    borderColor:newHabit.color===col?"white":"transparent",
+                  }}/>
+                ))}
+              </div>
+            </div>
+            <Btn onClick={addHabit} color={C.purple} style={{width:"100%"}}>+ ADD HABIT</Btn>
+          </div>
+        </Card>
+
+        <Card title="◎ MANAGE HABITS" accent={C.muted}>
+          <div style={{display:"flex",flexDirection:"column",gap:5}}>
+            {habits.map(h=>(
+              <div key={h.id} style={{display:"flex",alignItems:"center",gap:8,
+                padding:"8px 10px",borderRadius:8,background:C.faint}}>
+                <span>{h.icon}</span>
+                <span style={{flex:1,fontSize:11,color:C.text}}>{h.label}</span>
+                <div style={{width:8,height:8,borderRadius:"50%",background:h.color}}/>
+                <button onClick={()=>remove(h.id)} style={{background:"none",border:"none",color:C.muted,fontSize:10}}>✕</button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🌀 ADHD TOOLS
+// ══════════════════════════════════════════════════════════════
+function ADHDTab(){
+  const [mood,setMood]=useState(null);
+  const [timerSecs,setTimerSecs]=useState(25*60);
+  const [timerRunning,setTimerRunning]=useState(false);
+  const [timerMode,setTimerMode]=useState("focus");
+  const [rescueStep,setRescueStep]=useState(0);
+  const [bodyDouble,setBodyDouble]=useState(false);
+  const timerRef=useRef(null);
+
+  useEffect(()=>{
+    if(timerRunning){
+      timerRef.current=setInterval(()=>{
+        setTimerSecs(s=>{ if(s<=1){clearInterval(timerRef.current);setTimerRunning(false);return 0;} return s-1; });
+      },1000);
+    } else clearInterval(timerRef.current);
+    return()=>clearInterval(timerRef.current);
+  },[timerRunning]);
+
+  const resetTimer=(mode)=>{
+    setTimerMode(mode); setTimerRunning(false);
+    setTimerSecs(mode==="focus"?25*60:mode==="short"?5*60:15*60);
+  };
+
+  const mm=String(Math.floor(timerSecs/60)).padStart(2,"0");
+  const ss=String(timerSecs%60).padStart(2,"0");
+  const pct=timerMode==="focus"?timerSecs/(25*60)*100:timerMode==="short"?timerSecs/(5*60)*100:timerSecs/(15*60)*100;
+
+  const moods=[{v:"great",l:"🌟 Great"},{v:"ok",l:"😐 OK"},{v:"low",l:"😔 Low"},{v:"overwhelm",l:"🌀 Overwhelmed"}];
+  const moodTips={
+    great:"You're in a good headspace! Tackle something hard today. 🔥",
+    ok:"Steady state — pick one medium task and just start. You'll find your flow.",
+    low:"Low day is valid. Pick one tiny thing. Rest counts too. 💛",
+    overwhelm:"Stop. Breathe. Open the Rescue Me tool below. One thing at a time. 🌊",
+  };
+
+  const rescueSteps=[
+    {q:"Are you physically okay?",yes:"Good. Next step →",no:"Drink water, eat something, and rest first. Come back when ready."},
+    {q:"Do you know what needs to get done?",yes:"Good. Next step →",no:"Open your tasks tab and look at just ONE item."},
+    {q:"Can you do any one tiny piece of it right now?",yes:"Do JUST that one piece. Nothing else.",no:"Set a 5-min timer and just sit with the task open. That's it."},
+  ];
+
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+      <div>
+        {/* Mood */}
+        <Card title="◈ MOOD CHECK-IN" accent={C.purple}>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+            {moods.map(m=>(
+              <button key={m.v} onClick={()=>setMood(m.v)} style={{
+                flex:"1 1 40%",padding:"10px 8px",borderRadius:10,border:`1px solid`,
+                borderColor:mood===m.v?C.purple:C.border,
+                background:mood===m.v?C.purpleDim:C.faint,
+                color:mood===m.v?C.purple:C.muted,fontSize:11,transition:"all .2s",
+              }}>{m.l}</button>
+            ))}
+          </div>
+          {mood&&<div style={{padding:"10px 12px",borderRadius:8,background:C.purpleDim,
+            fontSize:11,color:C.purple,lineHeight:1.6}}>{moodTips[mood]}</div>}
+        </Card>
+
+        {/* Rescue Me */}
+        <Card title="◉ RESCUE MODE" accent={C.rose}>
+          <div style={{fontSize:10,color:C.muted,marginBottom:12}}>
+            When everything feels like too much — use this.
+          </div>
+          {rescueStep<rescueSteps.length?(
+            <div>
+              <div style={{fontSize:13,color:C.text,marginBottom:14,lineHeight:1.6}}>
+                {rescueSteps[rescueStep].q}
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>setRescueStep(s=>Math.min(s+1,rescueSteps.length))} style={{
+                  flex:1,padding:"10px",borderRadius:10,border:`1px solid ${C.green}44`,
+                  background:C.greenDim,color:C.green,fontSize:11}}>
+                  ✓ {rescueSteps[rescueStep].yes}
+                </button>
+                <button onClick={()=>setRescueStep(rescueSteps.length)} style={{
+                  flex:1,padding:"10px",borderRadius:10,border:`1px solid ${C.rose}44`,
+                  background:C.roseDim,color:C.rose,fontSize:11}}>
+                  {rescueSteps[rescueStep].no}
+                </button>
+              </div>
+              <div style={{marginTop:12,fontSize:10,color:C.muted}}>Step {rescueStep+1} of {rescueSteps.length}</div>
+            </div>
+          ):(
+            <div style={{textAlign:"center",padding:"16px 0"}}>
+              <div style={{fontSize:20,marginBottom:8}}>🌱</div>
+              <div style={{fontSize:12,color:C.green,marginBottom:10}}>You made it through. That's enough.</div>
+              <button onClick={()=>setRescueStep(0)} style={{padding:"8px 18px",borderRadius:8,
+                background:C.faint,border:`1px solid ${C.border}`,color:C.muted,fontSize:10}}>Start over</button>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div>
+        {/* Pomodoro */}
+        <Card title="◎ FOCUS TIMER" accent={C.teal}>
+          <div style={{display:"flex",gap:6,marginBottom:16}}>
+            {[["focus","25 min"],["short","5 min"],["long","15 min"]].map(([m,l])=>(
+              <button key={m} onClick={()=>resetTimer(m)} style={{
+                flex:1,padding:"6px 4px",borderRadius:8,border:`1px solid`,
+                borderColor:timerMode===m?C.teal:C.border,
+                background:timerMode===m?C.tealDim:"transparent",
+                color:timerMode===m?C.teal:C.muted,fontSize:10,
+              }}>{l}</button>
+            ))}
+          </div>
+          {/* Circle timer */}
+          <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
+            <div style={{position:"relative",width:140,height:140}}>
+              <svg width="140" height="140" style={{transform:"rotate(-90deg)"}}>
+                <circle cx="70" cy="70" r="60" fill="none" stroke={C.faint} strokeWidth="6"/>
+                <circle cx="70" cy="70" r="60" fill="none" stroke={C.teal} strokeWidth="6"
+                  strokeDasharray={`${2*Math.PI*60}`}
+                  strokeDashoffset={`${2*Math.PI*60*(1-pct/100)}`}
+                  strokeLinecap="round" style={{transition:"stroke-dashoffset .5s"}}/>
+              </svg>
+              <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",
+                alignItems:"center",justifyContent:"center"}}>
+                <div style={{fontSize:28,fontWeight:"bold",color:C.teal,lineHeight:1}}>{mm}:{ss}</div>
+                <div style={{fontSize:9,color:C.muted,letterSpacing:".1em",marginTop:4}}>
+                  {timerMode==="focus"?"FOCUS":timerMode==="short"?"SHORT BREAK":"LONG BREAK"}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+            <button onClick={()=>setTimerRunning(r=>!r)} style={{
+              padding:"10px 28px",borderRadius:10,border:`1px solid ${C.teal}44`,
+              background:timerRunning?C.roseDim:C.tealDim,
+              color:timerRunning?C.rose:C.teal,fontSize:12,letterSpacing:".1em",
+            }}>{timerRunning?"⏸ PAUSE":"▶ START"}</button>
+            <button onClick={()=>{setTimerRunning(false);resetTimer(timerMode);}} style={{
+              padding:"10px 16px",borderRadius:10,border:`1px solid ${C.border}`,
+              background:C.faint,color:C.muted,fontSize:12,
+            }}>↺</button>
+          </div>
+        </Card>
+
+        {/* Body Double */}
+        <Card title="◌ BODY DOUBLE MODE" accent={C.amber}>
+          <div style={{fontSize:10,color:C.muted,marginBottom:12,lineHeight:1.6}}>
+            Pretend someone is working alongside you. Declare your task and go.
+          </div>
+          {!bodyDouble?(
+            <button onClick={()=>setBodyDouble(true)} style={{
+              width:"100%",padding:"12px",borderRadius:10,
+              border:`1px solid ${C.amber}44`,background:C.amberDim,
+              color:C.amber,fontSize:11,letterSpacing:".08em",
+            }}>🤝 START BODY DOUBLE SESSION</button>
+          ):(
+            <div>
+              <div style={{padding:"12px",borderRadius:10,background:C.amberDim,
+                border:`1px solid ${C.amber}44`,marginBottom:10}}>
+                <div style={{fontSize:10,color:C.amber,marginBottom:6}}>👤 Your virtual buddy is here. What are you working on?</div>
+                <textarea rows={2} placeholder="I am working on..." style={{
+                  width:"100%",background:"transparent",border:"none",
+                  color:C.text,fontSize:11,resize:"none"}}/>
+              </div>
+              <div style={{fontSize:10,color:C.muted,marginBottom:10,animation:"pulse 3s infinite"}}>
+                🟢 Session active — your buddy believes in you
+              </div>
+              <button onClick={()=>setBodyDouble(false)} style={{
+                padding:"8px 16px",borderRadius:8,background:C.faint,
+                border:`1px solid ${C.border}`,color:C.muted,fontSize:10,
+              }}>End session</button>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function today(){ return new Date().toISOString().slice(0,10); }
